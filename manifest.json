@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Link Organizer",
+  "version": "1.0",
+  "description": "Organisiere deine gespeicherten Links in Ordnern.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Link Organizer - Aktuellen Tab speichern"
+  },
+  "permissions": ["tabs", "storage", "activeTab", "notifications", "clipboardWrite"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Aktuellen Tab speichern"
+    }
+  }
+}

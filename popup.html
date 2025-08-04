@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="style.css" />
+  <title>Link Manager</title>
+</head>
+<body>
+  <div class="app-container">
+          <div class="sidebar">
+        <h2>Ordner</h2>
+        <input id="newFolderName" type="text" placeholder="Neuer Ordner" />
+        <button id="createFolderBtn">Erstellen</button>
+        <ul id="folderList"></ul>
+        
+        <!-- Share Code Input - Compact -->
+        <div class="share-code-section">
+          <h3 class="share-code-title">Share-Code öffnen</h3>
+          <div class="share-code-input-compact">
+            <input type="text" id="shareCodeInput" placeholder="Code eingeben..." />
+            <button id="enterShareCodeBtn" title="Öffnen">→</button>
+          </div>
+        </div>
+      </div>
+    <div class="main-content">
+      <div class="header-row">
+        <h2 id="selectedFolderTitle">Links</h2>
+        <div class="header-actions">
+          <input type="text" id="searchInput" placeholder="Links suchen..." class="search-input" style="display: none;">
+          <a href="#" id="exportCsvBtn" class="export-link" style="display: none;">Export CSV</a>
+          <a href="#" id="copyLinksBtn" class="copy-link" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M19.5 16.5L19.5 4.5L18.75 3.75H9L8.25 4.5L8.25 7.5L5.25 7.5L4.5 8.25V20.25L5.25 21H15L15.75 20.25V17.25H18.75L19.5 16.5ZM15.75 15.75L15.75 8.25L15 7.5L9.75 7.5V5.25L18 5.25V15.75H15.75ZM6 9L14.25 9L14.25 19.5L6 19.5L6 9Z" fill="currentColor"/>
+            </svg>
+            Kopieren
+          </a>
+        </div>
+      </div>
+      
+            <!-- Add Button -->
+      <button id="saveLinkBtn" disabled>+ Tab hinzufügen</button>
+      
+      <!-- Share Code Display - Only shown when folder is shared -->
+      <div class="share-code-display-section" id="shareCodeDisplaySection" style="display: none;">
+        <div class="share-code-info">
+          <span class="share-code-label">Share-Code:</span>
+          <div class="share-code-container">
+            <input type="text" id="displayedShareCode" readonly />
+            <button id="copyDisplayedCodeBtn" title="Code kopieren">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M19.5 16.5L19.5 4.5L18.75 3.75H9L8.25 4.5L8.25 7.5L5.25 7.5L4.5 8.25V20.25L5.25 21H15L15.75 20.25V17.25H18.75L19.5 16.5ZM15.75 15.75L15.75 8.25L15 7.5L9.75 7.5V5.25L18 5.25V15.75H15.75ZM6 9L14.25 9L14.25 19.5L6 19.5L6 9Z" fill="currentColor"/>
+              </svg>
+            </button>
+            <button id="removeShareBtn" title="Teilen beenden">
+              <!-- SVG wird dynamisch geladen -->
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Quick Save Info -->
+      <div class="quick-save-info">
+        <p>💡 <strong>Tipp:</strong> Ziehen Sie Links per Drag & Drop zwischen Ordnern, um sie zu organisieren.</p>
+      </div>
+      
+      <!-- Messages Container -->
+      <div id="messagesContainer"></div>
+      
+      <!-- Links List -->
+      <div class="links-table">
+        <div class="table-header">
+          <div class="col-name sortable" data-sort="name">
+            Name
+            <span class="sort-icon">↕</span>
+          </div>
+          <div class="col-date sortable" data-sort="date">
+            Hinzugefügt am
+            <span class="sort-icon">↕</span>
+          </div>
+          <div class="col-actions">Aktionen</div>
+        </div>
+        <div id="linkList"></div>
+      </div>
+      
+      <!-- Onboarding Flow -->
+      <div id="onboardingFlow" class="onboarding-flow" style="display: none;">
+        <div class="onboarding-header">
+          <h1>Willkommen bei Link Organizer!</h1>
+          <p>Lass uns in 3 einfachen Schritten loslegen:</p>
+        </div>
+        
+        <div class="onboarding-steps">
+          <!-- Step 1: Create Folder -->
+          <div class="onboarding-step" id="step1">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Erstelle deinen ersten Ordner</h3>
+              <p>Organisiere deine Links in Ordnern für bessere Übersicht.</p>
+              <button id="createFirstFolderBtn" class="onboarding-btn">Ersten Ordner erstellen</button>
+            </div>
+          </div>
+          
+          <!-- Step 2: Save First Link -->
+          <div class="onboarding-step" id="step2" style="display: none;">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Speichere deinen ersten Link</h3>
+              <p>Füge den aktuellen Tab zu deinem Ordner hinzu.</p>
+              <button id="saveFirstLinkBtn" class="onboarding-btn">Aktuellen Tab speichern</button>
+            </div>
+          </div>
+          
+          <!-- Step 3: Learn Features -->
+          <div class="onboarding-step" id="step3" style="display: none;">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Entdecke die Funktionen</h3>
+              <div class="feature-grid">
+                <div class="feature-card">
+                  <div class="feature-icon">📁</div>
+                  <h4>Ordner organisieren</h4>
+                  <p>Erstelle Ordner für verschiedene Themen</p>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-icon">🔗</div>
+                  <h4>Links teilen</h4>
+                  <p>Teile Ordner mit Share-Codes</p>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-icon">📊</div>
+                  <h4>CSV Export</h4>
+                  <p>Exportiere Links als CSV-Datei</p>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-icon">⭐</div>
+                  <h4>Favoriten</h4>
+                  <p>Markiere wichtige Links als Favoriten</p>
+                </div>
+              </div>
+              <button id="finishOnboardingBtn" class="onboarding-btn">Los geht's!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state" style="display: none;">
+        Keine Links in diesem Ordner. Klicken Sie auf "+ Tab hinzufügen" um den aktuellen Tab zu speichern.
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
