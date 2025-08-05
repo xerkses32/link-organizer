@@ -14,13 +14,23 @@ const   DOM = {
     createFolderBtn: document.getElementById("createFolderBtn"),
     saveLinkBtn: document.getElementById("saveLinkBtn"),
     exportCsvBtn: document.getElementById("exportCsvBtn"),
-    copyLinksBtn: document.getElementById("copyLinksBtn"),
+    openAllLinksBtn: document.getElementById("openAllLinksBtn"),
     searchInput: document.getElementById("searchInput"),
     selectedFolderTitle: document.getElementById("selectedFolderTitle"),
     messagesContainer: document.getElementById("messagesContainer"),
     emptyState: document.getElementById("emptyState"),
     shareCodeInput: document.getElementById("shareCodeInput"),
-    enterShareCodeBtn: document.getElementById("enterShareCodeBtn")
+    enterShareCodeBtn: document.getElementById("enterShareCodeBtn"),
+    // History Overlay Elements
+    historyOverlay: document.getElementById("historyOverlay"),
+    historyToggleBtn: document.getElementById("historyToggleBtn"),
+    closeHistoryBtn: document.getElementById("closeHistoryBtn"),
+    historySearchInput: document.getElementById("historySearchInput"),
+    historyTimeFilter: document.getElementById("historyTimeFilter"),
+    selectAllHistory: document.getElementById("selectAllHistory"),
+    selectedHistoryCount: document.getElementById("selectedHistoryCount"),
+    historyList: document.getElementById("historyList"),
+    addSelectedToFolderBtn: document.getElementById("addSelectedToFolderBtn")
   };
 
 // ===== STATE MANAGEMENT =====
@@ -69,8 +79,23 @@ const Utils = {
   },
 
   isValidUrl(string) {
+    if (!string || typeof string !== 'string') return false;
+    
     try {
-      new URL(string);
+      const url = new URL(string);
+      
+      // Nur erlaubte Protokolle
+      const allowedProtocols = ['http:', 'https:'];
+      if (!allowedProtocols.includes(url.protocol)) {
+        return false;
+      }
+      
+      // Gefährliche Protokolle explizit blockieren
+      const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
+      if (dangerousProtocols.some(protocol => string.toLowerCase().startsWith(protocol))) {
+        return false;
+      }
+      
       return true;
     } catch (_) {
       return false;
@@ -78,7 +103,15 @@ const Utils = {
   },
 
   sanitizeInput(input) {
-    return input.replace(/[<>]/g, '');
+    if (!input || typeof input !== 'string') return '';
+    
+    return input
+      .replace(/[<>]/g, '') // Basis HTML-Tags entfernen
+      .replace(/javascript:/gi, '') // JavaScript-URLs blockieren
+      .replace(/on\w+=/gi, '') // Event-Handler entfernen
+      .replace(/data:/gi, '') // Data-URLs blockieren
+      .replace(/vbscript:/gi, '') // VBScript blockieren
+      .trim();
   },
 
   generateId() {
@@ -86,8 +119,44 @@ const Utils = {
   },
 
   clearElement(element) {
-    while (element.firstChild) {
-      element.removeChild(element.firstChild);
+    if (!element) {
+      console.error('Cannot clear element - element is null');
+      return;
+    }
+    
+    try {
+      while (element.firstChild) {
+        element.removeChild(element.firstChild);
+      }
+    } catch (error) {
+      console.error('Error clearing element:', error);
+    }
+  },
+
+  // History utility functions
+  formatDate(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) return 'Gerade eben';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+    if (diff < 604800000) return `${Math.floor(diff / 86400000)}d`;
+    
+    return date.toLocaleDateString('de-DE', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: '2-digit' 
+    });
+  },
+
+  getFaviconUrl(url) {
+    try {
+      const domain = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
+    } catch {
+      return '';
     }
   }
 };
@@ -152,6 +221,783 @@ const Storage = {
   }
 };
 
+// ===== HISTORY MANAGER =====
+const HistoryManager = {
+  historyItems: [],
+  selectedItems: new Set(),
+  isOpen: false,
+
+  async loadHistory(timeFilter = '168') {
+    try {
+      // Show loading state
+      this.showLoadingState();
+      
+      // Calculate time range
+      const now = Date.now();
+      const hoursAgo = timeFilter === 'all' ? 0 : parseInt(timeFilter);
+      const startTime = hoursAgo > 0 ? now - (hoursAgo * 60 * 60 * 1000) : 0;
+      
+      console.log('Loading history with timeFilter:', timeFilter, 'startTime:', startTime);
+      
+      // Check if chrome.history is available
+      if (!chrome.history || !chrome.history.search) {
+        throw new Error('History API nicht verfügbar. Stelle sicher, dass die "history" Permission aktiviert ist.');
+      }
+      
+      // Query Chrome history
+      const historyItems = await new Promise((resolve, reject) => {
+        chrome.history.search({
+          text: '',
+          startTime: startTime,
+          maxResults: 1000
+        }, (results) => {
+          if (chrome.runtime.lastError) {
+            console.error('Chrome history error:', chrome.runtime.lastError);
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            console.log('History results:', results);
+            resolve(results || []);
+          }
+        });
+      });
+      
+      console.log('Raw history items:', historyItems);
+      
+      // Filter and process history items
+      this.historyItems = historyItems
+        .filter(item => item.url && !item.url.startsWith('chrome://'))
+        .map(item => ({
+          id: item.id,
+          url: item.url,
+          title: item.title || item.url,
+          lastVisitTime: item.lastVisitTime,
+          visitCount: item.visitCount || 1,
+          favicon: Utils.getFaviconUrl(item.url)
+        }))
+        .sort((a, b) => b.lastVisitTime - a.lastVisitTime); // Sort by most recent first
+      
+      console.log('Processed history items:', this.historyItems);
+      console.log('History items count:', this.historyItems.length);
+      
+      this.renderHistoryList();
+      this.updateSelectedCount();
+      
+    } catch (error) {
+      console.error('Error loading history:', error);
+      this.showErrorState(error);
+    }
+  },
+
+  showLoadingState() {
+    Utils.clearElement(DOM.historyList);
+    DOM.historyList.innerHTML = `
+      <div class="history-loading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2v6h-6M3 12a9 9 0 015-8.163M3 22v-6h6"/>
+        </svg>
+        Lade Browserverlauf...
+      </div>
+    `;
+  },
+
+  showErrorState(error = null) {
+    Utils.clearElement(DOM.historyList);
+    const errorMessage = error ? error.message : 'Der Browserverlauf konnte nicht geladen werden.';
+    DOM.historyList.innerHTML = `
+      <div class="history-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <h4>Fehler beim Laden</h4>
+        <p>${errorMessage}</p>
+        <p style="font-size: 11px; margin-top: 8px; opacity: 0.7;">
+          Stelle sicher, dass die "history" Permission aktiviert ist.
+        </p>
+        <button onclick="location.reload()" style="margin-top: 12px; padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Extension neu laden
+        </button>
+      </div>
+    `;
+  },
+
+  renderHistoryList() {
+    console.log('Rendering history list with', this.historyItems.length, 'items');
+    Utils.clearElement(DOM.historyList);
+    
+    if (this.historyItems.length === 0) {
+      console.log('No history items to render');
+      DOM.historyList.innerHTML = `
+        <div class="history-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h4>Kein Verlauf</h4>
+          <p>Keine Browserverlauf-Einträge gefunden.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let currentDay = null;
+    let renderedCount = 0;
+    
+    this.historyItems.forEach((item, index) => {
+      console.log('Processing history item:', item.title, 'at index:', index);
+      
+      const itemDate = new Date(item.lastVisitTime);
+      const itemDay = itemDate.toDateString();
+      
+      // Add day header if it's a new day
+      if (itemDay !== currentDay) {
+        const dayHeader = this.createDayHeader(itemDate);
+        DOM.historyList.appendChild(dayHeader);
+        currentDay = itemDay;
+      }
+      
+      const historyItem = this.createHistoryItem(item, index);
+      DOM.historyList.appendChild(historyItem);
+      renderedCount++;
+      
+      console.log('History item added to DOM:', historyItem);
+      console.log('History item in DOM:', DOM.historyList.contains(historyItem));
+    });
+    
+    console.log('Rendered', renderedCount, 'history items');
+  },
+
+  createDayHeader(date) {
+    const header = document.createElement('div');
+    header.className = 'history-day-header';
+    
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    let dayText;
+    if (date.toDateString() === today.toDateString()) {
+      dayText = 'Heute';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      dayText = 'Gestern';
+    } else {
+      dayText = date.toLocaleDateString('de-DE', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+    
+    header.innerHTML = `
+      <div class="history-day-title">${dayText}</div>
+    `;
+    
+    return header;
+  },
+
+  createHistoryItem(item, index) {
+    console.log('Creating history item:', item.title, 'at index:', index);
+    
+    const li = document.createElement('div');
+    li.className = 'history-item';
+    li.dataset.historyId = item.id;
+    // li.draggable = true; // Entfernt - verwende Mouse-Events
+    console.log('History item created (no longer draggable)');
+    
+    const isSelected = this.selectedItems.has(item.id);
+    if (isSelected) {
+      li.classList.add('selected');
+    }
+    
+    li.innerHTML = `
+      <input type="checkbox" class="history-item-checkbox" ${isSelected ? 'checked' : ''}>
+      <img src="${item.favicon}" alt="" class="history-item-favicon" onerror="this.style.display='none'">
+      <div class="history-item-content">
+        <div class="history-item-title">${Utils.sanitizeInput(item.title)}</div>
+        <div class="history-item-url">${Utils.sanitizeInput(item.url)}</div>
+      </div>
+    `;
+    
+    // Add event listeners
+    const checkbox = li.querySelector('.history-item-checkbox');
+    const favicon = li.querySelector('.history-item-favicon');
+    const content = li.querySelector('.history-item-content');
+    checkbox.addEventListener('change', (e) => {
+      e.stopPropagation();
+      this.toggleHistoryItem(item.id, li);
+    });
+    
+    li.addEventListener('click', (e) => {
+      if (e.target !== checkbox) {
+        this.handleHistoryItemClick(e, item.id, li, index);
+      }
+    });
+    
+    // --- NEU: Manuelle Drag & Drop mit Mouse-Events ---
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let draggedElement = null;
+    
+    li.addEventListener('mousedown', (e) => {
+      // Nur links-klick für Drag starten
+      if (e.button !== 0) return;
+      
+      console.log('Mouse down on history item:', item.title);
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      draggedElement = li;
+      
+      // Visuelles Feedback
+      li.style.opacity = '0.5';
+      li.style.transform = 'scale(0.95)';
+      
+      // Drag-Daten vorbereiten
+      const dragData = {
+        type: 'history-item',
+        id: item.id,
+        title: item.title,
+        url: item.url,
+        favicon: item.favicon,
+        index: index,
+        isBulkDrag: this.selectedItems.has(item.id),
+        selectedItems: this.selectedItems.has(item.id) ? Array.from(this.selectedItems) : [item.id]
+      };
+      
+      // Globale Drag-Daten setzen
+      window.currentDragData = dragData;
+      
+      // Event-Listener für Drag-Bewegung und Drop
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      e.preventDefault();
+    });
+    
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      
+      // Visuelles Feedback für Drop-Zonen
+      const folders = document.querySelectorAll('#folderList li');
+      folders.forEach(folder => {
+        const rect = folder.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          folder.classList.add('folder-drop-target');
+        } else {
+          folder.classList.remove('folder-drop-target');
+        }
+      });
+    };
+    
+    const handleMouseUp = (e) => {
+      if (!isDragging) return;
+      
+      console.log('Mouse up - checking for drop target');
+      
+      // Drop-Zone finden
+      const folders = document.querySelectorAll('#folderList li');
+      let dropTarget = null;
+      
+      folders.forEach(folder => {
+        const rect = folder.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          dropTarget = folder;
+        }
+        folder.classList.remove('folder-drop-target');
+      });
+      
+      // Drop ausführen
+      if (dropTarget && window.currentDragData) {
+        const folderName = dropTarget.getAttribute('data-folder-name');
+        console.log('Dropping history item on folder:', folderName);
+        
+        // Visuelles Feedback: Ordner kurz hervorheben
+        dropTarget.style.transition = 'all 0.3s ease';
+        dropTarget.style.backgroundColor = 'rgba(16, 163, 127, 0.1)';
+        dropTarget.style.borderLeft = '3px solid var(--accent)';
+        
+        // Feedback nach 500ms zurücksetzen
+        setTimeout(() => {
+          dropTarget.style.backgroundColor = '';
+          dropTarget.style.borderLeft = '';
+        }, 500);
+        
+        // Simuliere ein Drop-Event
+        const dropEvent = new Event('drop');
+        dropEvent.dataTransfer = {
+          types: ['text/plain'],
+          getData: () => JSON.stringify(window.currentDragData)
+        };
+        
+        // Setze Ghost-Click-Flag NUR für History-Drop
+        window.ignoreNextClick = 'history-drop';
+        HistoryManager.handleHistoryItemDrop(dropEvent, folderName);
+      }
+      
+      // Aufräumen
+      isDragging = false;
+      draggedElement = null;
+      
+      if (li) {
+        li.style.opacity = '';
+        li.style.transform = '';
+      }
+      
+      // Event-Listener entfernen
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      
+      // Verzögerte Zurücksetzung der Drag-Daten, um Click-Outside-Handler zu vermeiden
+      setTimeout(() => {
+        window.currentDragData = null;
+      }, 200);
+    };
+    // --- ENDE NEU ---
+    
+    // Drag & Drop functionality
+    this.setupHistoryItemDragAndDrop(li, item, index);
+    
+    console.log('History item created and setup complete:', item.title, 'draggable:', li.draggable, 'element:', li);
+    
+    return li;
+  },
+
+  setupHistoryItemDragAndDrop(li, item, index) {
+    console.log('Setting up drag and drop for history item:', item.title);
+    
+    // --- NEU: Manuelle Drag & Drop mit Mouse-Events ---
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let draggedElement = null;
+    
+    li.addEventListener('mousedown', (e) => {
+      // Nur links-klick für Drag starten
+      if (e.button !== 0) return;
+      
+      console.log('Mouse down on history item:', item.title);
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      draggedElement = li;
+      
+      // Visuelles Feedback
+      li.style.opacity = '0.5';
+      li.style.transform = 'scale(0.95)';
+      
+      // Drag-Daten vorbereiten
+      const dragData = {
+        type: 'history-item',
+        id: item.id,
+        title: item.title,
+        url: item.url,
+        favicon: item.favicon,
+        index: index,
+        isBulkDrag: this.selectedItems.has(item.id),
+        selectedItems: this.selectedItems.has(item.id) ? Array.from(this.selectedItems) : [item.id]
+      };
+      
+      // Globale Drag-Daten setzen
+      window.currentDragData = dragData;
+      
+      // Event-Listener für Drag-Bewegung und Drop
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      e.preventDefault();
+    });
+    
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      
+      // Visuelles Feedback für Drop-Zonen
+      const folders = document.querySelectorAll('#folderList li');
+      folders.forEach(folder => {
+        const rect = folder.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          folder.classList.add('folder-drop-target');
+        } else {
+          folder.classList.remove('folder-drop-target');
+        }
+      });
+    };
+    
+    const handleMouseUp = (e) => {
+      if (!isDragging) return;
+      
+      console.log('Mouse up - checking for drop target');
+      
+      // Drop-Zone finden
+      const folders = document.querySelectorAll('#folderList li');
+      let dropTarget = null;
+      
+      folders.forEach(folder => {
+        const rect = folder.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          dropTarget = folder;
+        }
+        folder.classList.remove('folder-drop-target');
+      });
+      
+      // Drop ausführen
+      if (dropTarget && window.currentDragData) {
+        const folderName = dropTarget.getAttribute('data-folder-name');
+        console.log('Dropping history item on folder:', folderName);
+        
+        // Visuelles Feedback: Ordner kurz hervorheben
+        dropTarget.style.transition = 'all 0.3s ease';
+        dropTarget.style.backgroundColor = 'rgba(16, 163, 127, 0.1)';
+        dropTarget.style.borderLeft = '3px solid var(--accent)';
+        
+        // Feedback nach 500ms zurücksetzen
+        setTimeout(() => {
+          dropTarget.style.backgroundColor = '';
+          dropTarget.style.borderLeft = '';
+        }, 500);
+        
+        // Simuliere ein Drop-Event
+        const dropEvent = new Event('drop');
+        dropEvent.dataTransfer = {
+          types: ['text/plain'],
+          getData: () => JSON.stringify(window.currentDragData)
+        };
+        
+        // Setze Ghost-Click-Flag NUR für History-Drop
+        window.ignoreNextClick = 'history-drop';
+        HistoryManager.handleHistoryItemDrop(dropEvent, folderName);
+      }
+      
+      // Aufräumen
+      isDragging = false;
+      draggedElement = null;
+      
+      if (li) {
+        li.style.opacity = '';
+        li.style.transform = '';
+      }
+      
+      // Event-Listener entfernen
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      
+      // Verzögerte Zurücksetzung der Drag-Daten, um Click-Outside-Handler zu vermeiden
+      setTimeout(() => {
+        window.currentDragData = null;
+      }, 200);
+    };
+    // --- ENDE NEU ---
+    
+    // Entferne das alte native Drag & Drop
+    // li.addEventListener('dragstart', ...);
+    // li.addEventListener('dragend', ...);
+  },
+
+  handleHistoryItemClick(e, itemId, li, index) {
+    const isShiftPressed = e.shiftKey;
+    const isCmdPressed = e.metaKey || e.ctrlKey;
+    
+    if (isShiftPressed || isCmdPressed) {
+      // Bulk selection
+      if (isShiftPressed) {
+        this.selectHistoryRange(index);
+      } else if (isCmdPressed) {
+        this.toggleHistoryItem(itemId, li);
+      }
+    } else {
+      // Single selection
+      this.toggleHistoryItem(itemId, li);
+    }
+  },
+
+  selectHistoryRange(endIndex) {
+    const items = Array.from(DOM.historyList.querySelectorAll('.history-item'));
+    const lastSelectedIndex = this.getLastSelectedIndex();
+    
+    if (lastSelectedIndex === -1) {
+      // No previous selection, just select the clicked item
+      this.toggleHistoryItem(this.historyItems[endIndex].id, items[endIndex]);
+      return;
+    }
+    
+    const startIndex = Math.min(lastSelectedIndex, endIndex);
+    const endIdx = Math.max(lastSelectedIndex, endIndex);
+    
+    // Select all items in range
+    for (let i = startIndex; i <= endIdx; i++) {
+      const item = this.historyItems[i];
+      const element = items[i];
+      if (item && element) {
+        this.selectedItems.add(item.id);
+        element.classList.add('selected');
+        element.querySelector('.history-item-checkbox').checked = true;
+      }
+    }
+    
+    this.updateSelectedCount();
+    this.updateSelectAllState();
+  },
+
+  getLastSelectedIndex() {
+    const selectedItems = Array.from(this.selectedItems);
+    if (selectedItems.length === 0) return -1;
+    
+    const lastSelectedId = selectedItems[selectedItems.length - 1];
+    return this.historyItems.findIndex(item => item.id === lastSelectedId);
+  },
+
+  async handleHistoryItemDrop(e, targetFolderName) {
+    console.log('handleHistoryItemDrop called for folder:', targetFolderName, e);
+    e.preventDefault();
+    
+    console.log('History item drop detected for folder:', targetFolderName);
+    
+    try {
+      const dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
+      console.log('Drag data:', dragData);
+      
+      if (dragData.type !== 'history-item') {
+        return;
+      }
+      
+      const folders = await Storage.getFolders();
+      if (!folders[targetFolderName]) {
+        folders[targetFolderName] = [];
+      }
+      
+      let addedCount = 0;
+      let skippedCount = 0;
+      
+      if (dragData.isBulkDrag && dragData.selectedItems) {
+        // Bulk drag - add multiple items
+        for (const itemId of dragData.selectedItems) {
+          const historyItem = this.historyItems.find(item => item.id === itemId);
+          if (historyItem) {
+            const newLink = {
+              id: Utils.generateId(),
+              url: historyItem.url,
+              name: historyItem.title,
+              addedAt: new Date().toISOString(),
+              starred: false
+            };
+            
+            // Check if link already exists
+            const exists = folders[targetFolderName].some(link => link.url === newLink.url);
+            if (!exists) {
+              folders[targetFolderName].push(newLink);
+              addedCount++;
+            } else {
+              skippedCount++;
+            }
+          }
+        }
+      } else {
+        // Single item drag
+        const newLink = {
+          id: Utils.generateId(),
+          url: dragData.url,
+          name: dragData.title,
+          addedAt: new Date().toISOString(),
+          starred: false
+        };
+        
+        // Check if link already exists
+        const exists = folders[targetFolderName].some(link => link.url === newLink.url);
+        if (exists) {
+          Utils.showMessage('Link bereits im Zielordner vorhanden.', 'error');
+          return;
+        }
+        
+        folders[targetFolderName].push(newLink);
+        addedCount = 1;
+      }
+      
+      await Storage.setFolders(folders);
+      
+      // Update UI if we're currently viewing the target folder
+      if (State.currentFolder === targetFolderName) {
+        State.update({ currentLinks: folders[targetFolderName] });
+        await LinkManager.renderLinks(folders[targetFolderName]);
+      }
+      
+      // Update folder count
+      await updateFolderCountDirect(targetFolderName);
+      
+      if (addedCount > 0) {
+        if (skippedCount > 0) {
+          Utils.showMessage(`${addedCount} Links hinzugefügt, ${skippedCount} übersprungen (bereits vorhanden).`);
+        } else {
+          Utils.showMessage(`${addedCount} Link${addedCount > 1 ? 's' : ''} zum Ordner "${targetFolderName}" hinzugefügt.`);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error dropping history item:', error);
+      Utils.showMessage('Fehler beim Hinzufügen des Links: ' + error.message, 'error');
+    }
+  },
+
+  toggleHistoryItem(itemId, element) {
+    if (this.selectedItems.has(itemId)) {
+      this.selectedItems.delete(itemId);
+      element.classList.remove('selected');
+    } else {
+      this.selectedItems.add(itemId);
+      element.classList.add('selected');
+    }
+    this.updateSelectedCount();
+    this.updateSelectAllState();
+  },
+
+  updateSelectedCount() {
+    const count = this.selectedItems.size;
+    DOM.selectedHistoryCount.textContent = count;
+    DOM.addSelectedToFolderBtn.disabled = count === 0;
+  },
+
+  updateSelectAllState() {
+    const allSelected = this.historyItems.length > 0 && 
+                      this.selectedItems.size === this.historyItems.length;
+    DOM.selectAllHistory.checked = allSelected;
+    DOM.selectAllHistory.indeterminate = this.selectedItems.size > 0 && 
+                                        this.selectedItems.size < this.historyItems.length;
+  },
+
+  selectAllHistory() {
+    this.historyItems.forEach(item => {
+      this.selectedItems.add(item.id);
+    });
+    this.renderHistoryList();
+    this.updateSelectedCount();
+    this.updateSelectAllState();
+  },
+
+  deselectAllHistory() {
+    this.selectedItems.clear();
+    this.renderHistoryList();
+    this.updateSelectedCount();
+    this.updateSelectAllState();
+  },
+
+  async addSelectedToFolder() {
+    if (this.selectedItems.size === 0) return;
+    
+    const selectedItems = this.historyItems.filter(item => 
+      this.selectedItems.has(item.id)
+    );
+    
+    // Get current folder
+    const currentFolder = State.currentFolder;
+    if (!currentFolder) {
+      Utils.showMessage('Bitte wähle zuerst einen Ordner aus.', 'error');
+      return;
+    }
+    
+    try {
+      // Get current folders
+      const folders = await Storage.getFolders();
+      const currentLinks = folders[currentFolder] || [];
+      
+      // Add selected history items to folder
+      const newLinks = selectedItems.map(item => ({
+        id: Utils.generateId(),
+        name: item.title,
+        url: item.url,
+        date: new Date().toISOString(),
+        starred: false,
+        favicon: item.favicon
+      }));
+      
+      // Update folder - add new links to existing ones
+      folders[currentFolder] = [...newLinks, ...currentLinks];
+      await Storage.setFolders(folders);
+      
+      // Update UI
+      await FolderManager.loadFolders();
+      await LinkManager.renderLinks(folders[currentFolder]);
+      
+      // Update folder count
+      await updateFolderCountDirect(currentFolder);
+      
+      // Clear selection
+      this.selectedItems.clear();
+      this.renderHistoryList();
+      this.updateSelectedCount();
+      
+      Utils.showMessage(`${selectedItems.length} Links zum Ordner "${currentFolder}" hinzugefügt.`);
+      
+    } catch (error) {
+      console.error('Error adding history items to folder:', error);
+      Utils.showMessage('Fehler beim Hinzufügen der Links.', 'error');
+    }
+  },
+
+  filterHistory(searchTerm) {
+    const filteredItems = this.historyItems.filter(item =>
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.url.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    this.renderFilteredHistory(filteredItems);
+  },
+
+  renderFilteredHistory(filteredItems) {
+    Utils.clearElement(DOM.historyList);
+    
+    if (filteredItems.length === 0) {
+      DOM.historyList.innerHTML = `
+        <div class="history-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <h4>Keine Ergebnisse</h4>
+          <p>Keine Verlauf-Einträge gefunden.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let currentDay = null;
+    
+    filteredItems.forEach((item, index) => {
+      const itemDate = new Date(item.lastVisitTime);
+      const itemDay = itemDate.toDateString();
+      
+      // Add day header if it's a new day
+      if (itemDay !== currentDay) {
+        const dayHeader = this.createDayHeader(itemDate);
+        DOM.historyList.appendChild(dayHeader);
+        currentDay = itemDay;
+      }
+      
+      const historyItem = this.createHistoryItem(item, index);
+      DOM.historyList.appendChild(historyItem);
+    });
+  },
+
+  toggleHistoryOverlay() {
+    this.isOpen = !this.isOpen;
+    
+    console.log('Toggling history overlay, isOpen:', this.isOpen);
+    console.log('chrome.history available:', !!chrome.history);
+    console.log('chrome.history.search available:', !!(chrome.history && chrome.history.search));
+    
+    if (this.isOpen) {
+      console.log('Opening history overlay');
+      console.log('DOM.historyOverlay exists:', !!DOM.historyOverlay);
+      console.log('DOM.historyList exists:', !!DOM.historyList);
+      DOM.historyOverlay.classList.add('open');
+      DOM.historyToggleBtn.classList.add('active');
+      this.loadHistory(DOM.historyTimeFilter.value);
+    } else {
+      console.log('Closing history overlay');
+      DOM.historyOverlay.classList.remove('open');
+      DOM.historyToggleBtn.classList.remove('active');
+    }
+  }
+};
+
 // ===== EVENT HANDLERS =====
 const EventHandlers = {
   handleFolderClick(name, folders) {
@@ -206,7 +1052,7 @@ const EventHandlers = {
   handleFolderDragEnter(e) {
     e.preventDefault();
     e.currentTarget.classList.add('folder-drop-target');
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = 'copy';
   },
 
   handleFolderDragLeave(e) {
@@ -314,13 +1160,17 @@ const FolderManager = {
       links = [];
     }
     
-    const li = document.createElement("li");
+      const li = document.createElement("li");
     li.setAttribute('data-folder-name', name); // Add data attribute for easy identification
     
     // Folder name with count
     const folderName = document.createElement("span");
     folderName.className = "folder-name";
-    folderName.textContent = Utils.sanitizeInput(name);
+    
+    // Create inner span for text truncation
+    const folderNameText = document.createElement("span");
+    folderNameText.textContent = Utils.sanitizeInput(name);
+    folderName.appendChild(folderNameText);
     
     const countElement = document.createElement("span");
     countElement.className = "folder-count";
@@ -368,22 +1218,32 @@ const FolderManager = {
     
     // Drag & drop handlers for links (when dragging links TO folders)
     li.addEventListener('dragover', (e) => {
-      if (e.dataTransfer.types.includes('application/json') && !e.dataTransfer.types.includes('folder-drag')) {
+      console.log('DRAGOVER on folder:', name, e);
+      if ((e.dataTransfer.types.includes('application/json') && !e.dataTransfer.types.includes('folder-drag')) ||
+          e.dataTransfer.types.includes('text/plain')) {
         EventHandlers.handleFolderDragOver(e);
       }
     });
     li.addEventListener('drop', (e) => {
+      console.log('DROP EVENT on folder:', name, e);
+      console.log('DataTransfer types:', e.dataTransfer.types);
+      console.log('DataTransfer data:', e.dataTransfer.getData('text/plain'));
+      
       if (e.dataTransfer.types.includes('application/json') && !e.dataTransfer.types.includes('folder-drag')) {
         LinkManager.handleFolderDrop(e, name);
+      } else if (e.dataTransfer.types.includes('text/plain')) {
+        HistoryManager.handleHistoryItemDrop(e, name);
       }
     });
     li.addEventListener('dragenter', (e) => {
-      if (e.dataTransfer.types.includes('application/json') && !e.dataTransfer.types.includes('folder-drag')) {
+      if ((e.dataTransfer.types.includes('application/json') && !e.dataTransfer.types.includes('folder-drag')) ||
+          e.dataTransfer.types.includes('text/plain')) {
         EventHandlers.handleFolderDragEnter(e);
       }
     });
     li.addEventListener('dragleave', (e) => {
-      if (e.dataTransfer.types.includes('application/json') && !e.dataTransfer.types.includes('folder-drag')) {
+      if ((e.dataTransfer.types.includes('application/json') && !e.dataTransfer.types.includes('folder-drag')) ||
+          e.dataTransfer.types.includes('text/plain')) {
         EventHandlers.handleFolderDragLeave(e);
       }
     });
@@ -433,7 +1293,7 @@ const FolderManager = {
 
   handleFolderDragOver(e) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = 'copy';
   },
 
   handleFolderDragEnter(e) {
@@ -728,7 +1588,6 @@ const FolderManager = {
         DOM.selectedFolderTitle.textContent = 'Links';
         DOM.saveLinkBtn.disabled = true;
         DOM.exportCsvBtn.style.display = 'none';
-        DOM.copyLinksBtn.style.display = 'none';
         DOM.searchInput.style.display = 'none';
         await LinkManager.renderLinks([]);
       }
@@ -843,9 +1702,9 @@ const FolderManager = {
          tab.addEventListener('click', () => {
            tabs.forEach(t => t.classList.remove('active'));
            tab.classList.add('active');
-         });
-       });
-       
+  });
+});
+
        // Add event listeners for buttons
        const closeBtn = dialog.querySelector('#closeShareBtn');
        const generateBtn = dialog.querySelector('#generateShareBtn');
@@ -1029,10 +1888,14 @@ const FolderManager = {
     },
 
    generateShareCodeString(folderName, permission) {
-     const timestamp = Date.now().toString(36);
-     const random = Math.random().toString(36).substring(2, 6);
-     const code = `LINK-${timestamp}${random}`.toUpperCase();
-     console.log('Generated share code:', code);
+     // Kryptographisch sichere Zufallszahlen
+     const array = new Uint8Array(8);
+     crypto.getRandomValues(array);
+     const randomPart = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+     
+     const timestamp = Date.now();
+     const code = `LINK-${timestamp}-${randomPart}`.toUpperCase();
+     console.log('Generated secure share code:', code);
      return code;
    },
 
@@ -1214,14 +2077,15 @@ const FolderManager = {
        }
      }
      
-     // Show/hide search, export and copy based on links availability
+     // Show/hide search, export and open all based on links availability
      const hasLinks = links && links.length > 0;
      DOM.searchInput.style.display = hasLinks ? 'inline-block' : 'none';
      DOM.exportCsvBtn.style.display = hasLinks ? 'inline-block' : 'none';
-     DOM.copyLinksBtn.style.display = hasLinks ? 'inline-block' : 'none';
+     DOM.openAllLinksBtn.style.display = hasLinks ? 'inline-block' : 'none';
      
      // Always render fresh links from storage
-     await LinkManager.renderLinks([]);
+     console.log('Rendering links in openFolder:', links);
+     await LinkManager.renderLinks(links);
      SortManager.updateSortIndicators(); // Update sort indicators when opening folder
    },
 
@@ -1230,14 +2094,35 @@ const FolderManager = {
    createSharedFolderElement(folderName, share) {
      const li = document.createElement('li');
      li.className = 'shared-folder-item';
-     li.innerHTML = `
-       <div class="shared-folder-info">
-         <span class="shared-folder-name">${folderName}</span>
-         <span class="shared-folder-code">${share.code}</span>
-         <span class="shared-folder-permission">${share.permission === 'view' ? 'Nur anzeigen' : 'Bearbeiten'}</span>
-       </div>
-       <button class="remove-share-btn" onclick="FolderManager.removeShare('${folderName}', '${share.code}')">✕</button>
-     `;
+     
+     // Sichere DOM-Erstellung ohne innerHTML
+     const infoDiv = document.createElement('div');
+     infoDiv.className = 'shared-folder-info';
+     
+     const nameSpan = document.createElement('span');
+     nameSpan.className = 'shared-folder-name';
+     nameSpan.textContent = Utils.sanitizeInput(folderName);
+     
+     const codeSpan = document.createElement('span');
+     codeSpan.className = 'shared-folder-code';
+     codeSpan.textContent = Utils.sanitizeInput(share.code);
+     
+     const permissionSpan = document.createElement('span');
+     permissionSpan.className = 'shared-folder-permission';
+     permissionSpan.textContent = share.permission === 'view' ? 'Nur anzeigen' : 'Bearbeiten';
+     
+     const removeBtn = document.createElement('button');
+     removeBtn.className = 'remove-share-btn';
+     removeBtn.textContent = '✕';
+     removeBtn.addEventListener('click', () => {
+       FolderManager.removeShare(folderName, share.code);
+     });
+     
+     infoDiv.appendChild(nameSpan);
+     infoDiv.appendChild(codeSpan);
+     infoDiv.appendChild(permissionSpan);
+     li.appendChild(infoDiv);
+     li.appendChild(removeBtn);
      
      return li;
    },
@@ -1287,30 +2172,57 @@ const FolderManager = {
 
 // ===== LINK MANAGEMENT =====
 const LinkManager = {
-     async renderLinks(links) {
-     try {
-       // Always get fresh data from storage if we have a current folder
-       if (State.currentFolder) {
-         const folders = await Storage.getFolders();
-         const freshLinks = folders[State.currentFolder] || [];
-         console.log('Rendering fresh links for folder:', State.currentFolder, freshLinks);
-         links = freshLinks;
-       }
-       
-       // Ensure links is an array
-       if (!Array.isArray(links)) {
-         console.error('Links is not an array:', links);
-         links = [];
-       }
-       
-       Utils.clearElement(DOM.linkList);
-       
-       if (!links || links.length === 0) {
-         DOM.emptyState.style.display = 'block';
-         return;
-       }
-       
-       DOM.emptyState.style.display = 'none';
+       async renderLinks(links) {
+    try {
+      console.log('renderLinks called with:', links);
+      console.log('State.currentFolder:', State.currentFolder);
+      
+      // Always get fresh data from storage if we have a current folder
+      if (State.currentFolder) {
+        const folders = await Storage.getFolders();
+        const freshLinks = folders[State.currentFolder] || [];
+        console.log('Rendering fresh links for folder:', State.currentFolder, freshLinks);
+        links = freshLinks;
+      }
+      
+      // Ensure links is an array
+      if (!Array.isArray(links)) {
+        console.error('Links is not an array:', links);
+        links = [];
+      }
+      
+      console.log('Final links to render:', links);
+      
+      // Safe DOM element checks
+      if (!DOM.linkList) {
+        console.error('DOM.linkList is null - cannot render links');
+        return;
+      }
+      
+      if (!DOM.emptyState) {
+        console.error('DOM.emptyState is null - cannot show empty state');
+        return;
+      }
+      
+      console.log('Clearing linkList element');
+      Utils.clearElement(DOM.linkList);
+      
+      if (!links || links.length === 0) {
+        console.log('No links to render, showing empty state');
+        try {
+          DOM.emptyState.style.display = 'block';
+        } catch (error) {
+          console.error('Error showing empty state:', error);
+        }
+        return;
+      }
+      
+      console.log('Hiding empty state and rendering', links.length, 'links');
+      try {
+        DOM.emptyState.style.display = 'none';
+      } catch (error) {
+        console.error('Error hiding empty state:', error);
+      }
        
        const sortedLinks = State.currentSort ? 
          SortManager.sortLinks(links, State.currentSort.field, State.currentSort.direction) : 
@@ -1320,10 +2232,23 @@ const LinkManager = {
         CONFIG.SVG_ICONS.map(icon => IconManager.loadSvgIcon(icon))
       );
       
+      console.log('Creating', sortedLinks.length, 'link elements');
       sortedLinks.forEach((linkObj, index) => {
-        const linkElement = this.createLinkElement(linkObj, index, editIcon, deleteIcon);
-        DOM.linkList.appendChild(linkElement);
+        try {
+          console.log('Creating link element for:', linkObj);
+          const linkElement = this.createLinkElement(linkObj, index, editIcon, deleteIcon);
+          if (linkElement && DOM.linkList) {
+            DOM.linkList.appendChild(linkElement);
+            console.log('Successfully appended link element', index);
+          } else {
+            console.error('Failed to create or append link element for index:', index);
+          }
+        } catch (error) {
+          console.error('Error creating link element for index', index, ':', error);
+        }
       });
+      
+      console.log('Finished rendering links. DOM.linkList children:', DOM.linkList.children.length);
       
       await this.saveMissingLinkIds(links);
     } catch (error) {
@@ -1333,33 +2258,47 @@ const LinkManager = {
   },
 
   createLinkElement(linkObj, index, editIcon, deleteIcon) {
-    const li = document.createElement("div");
-    
-    // Ensure link has an ID and starred property
-    if (!linkObj.id) {
-      linkObj.id = Utils.generateId();
+    try {
+      console.log('Creating link element for:', linkObj);
+      
+      const li = document.createElement("div");
+      
+      // Ensure link has an ID and starred property
+      if (!linkObj.id) {
+        linkObj.id = Utils.generateId();
+      }
+      if (linkObj.starred === undefined) {
+        linkObj.starred = false;
+      }
+      
+      // Validate link object
+      if (!linkObj.url) {
+        console.error('Link object missing URL:', linkObj);
+        return null;
+      }
+      
+      // Name column with thumbnail
+      const nameContainer = this.createNameContainer(linkObj);
+      
+      // Date column
+      const dateDiv = this.createDateElement(linkObj);
+      
+      // Actions column
+      const actionIcons = this.createActionIcons(linkObj, index, li, editIcon, deleteIcon);
+      
+      li.appendChild(nameContainer);
+      li.appendChild(dateDiv);
+      li.appendChild(actionIcons);
+      
+      // Drag & Drop functionality
+      this.setupDragAndDrop(li, linkObj, index);
+      
+      console.log('Successfully created link element');
+      return li;
+    } catch (error) {
+      console.error('Error creating link element:', error);
+      return null;
     }
-    if (linkObj.starred === undefined) {
-      linkObj.starred = false;
-    }
-    
-    // Name column with thumbnail
-    const nameContainer = this.createNameContainer(linkObj);
-    
-    // Date column
-    const dateDiv = this.createDateElement(linkObj);
-    
-    // Actions column
-    const actionIcons = this.createActionIcons(linkObj, index, li, editIcon, deleteIcon);
-    
-    li.appendChild(nameContainer);
-    li.appendChild(dateDiv);
-    li.appendChild(actionIcons);
-    
-    // Drag & Drop functionality
-    this.setupDragAndDrop(li, linkObj, index);
-    
-    return li;
   },
 
   createNameContainer(linkObj) {
@@ -1368,7 +2307,16 @@ const LinkManager = {
     
     const thumbnail = document.createElement("img");
     thumbnail.className = "link-thumbnail";
-    thumbnail.src = `https://www.google.com/s2/favicons?domain=${new URL(linkObj.url).hostname}&sz=16`;
+    
+    // Safe URL parsing for favicon
+    try {
+      const url = new URL(linkObj.url);
+      thumbnail.src = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=16`;
+    } catch (error) {
+      console.error('Invalid URL for favicon:', linkObj.url);
+      thumbnail.style.display = 'none';
+    }
+    
     thumbnail.alt = "";
     thumbnail.onerror = () => {
       thumbnail.style.display = 'none';
@@ -1609,7 +2557,6 @@ const LinkManager = {
       // Hide export and copy links if no links left
       if (!State.currentLinks || State.currentLinks.length === 0) {
         DOM.exportCsvBtn.style.display = 'none';
-        DOM.copyLinksBtn.style.display = 'none';
       }
       
       await this.renderLinks(State.currentLinks);
@@ -1717,6 +2664,74 @@ const LinkManager = {
     }).join('\n');
     
     return linksContent;
+  },
+
+  // Rate-Limiting für Tab-Erstellung
+  tabCreationCount: 0,
+  lastTabCreationTime: 0,
+  MAX_TABS_PER_MINUTE: 10,
+  TAB_CREATION_COOLDOWN: 60000, // 1 Minute
+
+  canCreateTab() {
+    const now = Date.now();
+    
+    // Reset counter wenn Cooldown abgelaufen ist
+    if (now - this.lastTabCreationTime > this.TAB_CREATION_COOLDOWN) {
+      this.tabCreationCount = 0;
+      this.lastTabCreationTime = now;
+    }
+    
+    if (this.tabCreationCount >= this.MAX_TABS_PER_MINUTE) {
+      return false;
+    }
+    
+    this.tabCreationCount++;
+    return true;
+  },
+
+  async openAllLinks() {
+    if (!State.currentFolder || !State.currentLinks || State.currentLinks.length === 0) {
+      Utils.showMessage('Keine Links zum Öffnen vorhanden.', 'error');
+      return;
+    }
+    
+    try {
+      const validLinks = State.currentLinks.filter(link => {
+        return Utils.isValidUrl(link.url);
+      });
+      
+      if (validLinks.length === 0) {
+        Utils.showMessage('Keine gültigen Links zum Öffnen gefunden.', 'error');
+        return;
+      }
+      
+      // Rate-Limiting prüfen
+      if (!this.canCreateTab()) {
+        Utils.showMessage('Zu viele Tabs in kurzer Zeit. Bitte warten Sie einen Moment.', 'error');
+        return;
+      }
+      
+      // Open all links in new tabs
+      for (const link of validLinks) {
+        try {
+          if (!this.canCreateTab()) {
+            Utils.showMessage(`Nur ${this.MAX_TABS_PER_MINUTE} Tabs pro Minute erlaubt.`, 'error');
+            break;
+          }
+          
+          await chrome.tabs.create({ url: link.url, active: false });
+          // Small delay to prevent overwhelming the browser
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.error('Error opening link:', link.url, error);
+        }
+      }
+      
+      Utils.showMessage(`${validLinks.length} Links in neuen Tabs geöffnet.`);
+    } catch (error) {
+      console.error('Error opening all links:', error);
+      Utils.showMessage('Fehler beim Öffnen der Links: ' + error.message, 'error');
+    }
   },
 
         async moveLinkToFolder(draggedLinkId, targetFolderName, dragData = null) {
@@ -2091,6 +3106,8 @@ const TabManager = {
       
       State.update({ currentTab: tabs[0] });
       
+      // Tab info UI removed - no longer needed
+      
       if (State.currentFolder) {
         DOM.saveLinkBtn.disabled = false;
       }
@@ -2144,19 +3161,23 @@ const TabManager = {
       State.update({ currentLinks: folders[State.currentFolder] });
       
       if (State.currentLinks && State.currentLinks.length > 0) {
-        DOM.exportCsvBtn.style.display = 'inline-block';
-        DOM.copyLinksBtn.style.display = 'inline-block';
+        if (DOM.exportCsvBtn) {
+          DOM.exportCsvBtn.style.display = 'inline-block';
+        }
+            // Copy button removed - focusing on history feature
       }
       
-      await LinkManager.renderLinks(State.currentLinks);
-      
-      // Update folder count
-      await updateFolderCountDirect(State.currentFolder);
-      
-      // Check if we should hide onboarding after saving first link
-      await OnboardingManager.checkAndShowOnboarding();
-      
-      Utils.showMessage('Tab erfolgreich hinzugefügt.');
+      // Update UI with error handling
+      try {
+        await LinkManager.renderLinks(State.currentLinks);
+        await updateFolderCountDirect(State.currentFolder);
+        // Don't call checkAndShowOnboarding here as it resets the view
+        Utils.showMessage('Tab erfolgreich hinzugefügt.');
+      } catch (uiError) {
+        console.error('Error updating UI after saving:', uiError);
+        // Still show success message even if UI update fails
+        Utils.showMessage('Link gespeichert, aber UI-Update fehlgeschlagen.');
+      }
     } catch (error) {
       console.error('Error saving tab:', error);
       Utils.showMessage('Fehler beim Speichern des Tabs: ' + error.message, 'error');
@@ -2296,8 +3317,40 @@ const OnboardingManager = {
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    console.log('DOMContentLoaded - Starting initialization...');
+    
+    // Full-Page Modus Erkennung
+    if (window.location.search.includes('fullpage=true') || 
+        window.innerWidth > 600) {
+      document.body.classList.add('full-page');
+      console.log('Full-Page Modus aktiviert');
+    }
+    
+    // Verify all DOM elements are available
+    const requiredElements = [
+      'folderList', 'linkList', 'newFolderName', 'createFolderBtn', 
+      'saveLinkBtn', 'exportCsvBtn', 'openAllLinksBtn', 'searchInput', 'selectedFolderTitle', 
+      'messagesContainer', 'emptyState', 'shareCodeInput', 'enterShareCodeBtn'
+    ];
+    
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    if (missingElements.length > 0) {
+      console.error('Missing DOM elements:', missingElements);
+      throw new Error(`Required DOM elements not found: ${missingElements.join(', ')}`);
+    }
+    
+    console.log('All required DOM elements found');
+    
+    console.log('Loading current tab...');
     await TabManager.loadCurrentTab();
+    console.log('Loading folders...');
     await FolderManager.loadFolders();
+    
+    // Debug: Check if we have any folders and links
+    const debugFolders = await Storage.getFolders();
+    console.log('Debug - All folders:', debugFolders);
+    console.log('Debug - Current folder:', State.currentFolder);
+    console.log('Debug - Current links:', State.currentLinks);
     
     // Check and show onboarding if needed
     await OnboardingManager.checkAndShowOnboarding();
@@ -2308,13 +3361,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     DOM.saveLinkBtn.addEventListener('click', () => TabManager.saveCurrentTab());
     DOM.searchInput.addEventListener('input', () => LinkManager.handleSearch());
     DOM.exportCsvBtn.addEventListener('click', () => LinkManager.exportCsv());
+    DOM.openAllLinksBtn.addEventListener('click', () => LinkManager.openAllLinks());
     DOM.enterShareCodeBtn.addEventListener('click', () => FolderManager.enterShareCode());
     
-    // Copy Links functionality
-    const copyLinksBtn = document.getElementById('copyLinksBtn');
-    if (copyLinksBtn) {
-      copyLinksBtn.addEventListener('click', () => LinkManager.copyCurrentFolderLinks());
-    }
+    // History Overlay Event Listeners
+    DOM.historyToggleBtn.addEventListener('click', () => HistoryManager.toggleHistoryOverlay());
+    DOM.closeHistoryBtn.addEventListener('click', () => HistoryManager.toggleHistoryOverlay());
+    DOM.historySearchInput.addEventListener('input', (e) => HistoryManager.filterHistory(e.target.value));
+    DOM.historyTimeFilter.addEventListener('change', (e) => HistoryManager.loadHistory(e.target.value));
+    DOM.selectAllHistory.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        HistoryManager.selectAllHistory();
+      } else {
+        HistoryManager.deselectAllHistory();
+      }
+    });
+    DOM.addSelectedToFolderBtn.addEventListener('click', () => HistoryManager.addSelectedToFolder());
+    
+    // ESC key handler for closing history overlay
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && HistoryManager.isOpen) {
+        HistoryManager.toggleHistoryOverlay();
+      }
+    });
+    
+    // Click outside handler for closing history overlay
+    let clickOutsideHandler = (e) => {
+      if (window.ignoreNextClick === 'history-drop') {
+        window.ignoreNextClick = null;
+        return; // Ignoriere diesen Click nur für History-Drop!
+      }
+      if (HistoryManager.isOpen && 
+          !DOM.historyOverlay.contains(e.target) && 
+          !DOM.historyToggleBtn.contains(e.target)) {
+        HistoryManager.toggleHistoryOverlay();
+      }
+    };
+    
+    document.addEventListener('click', clickOutsideHandler);
+    
+    // Copy Links functionality removed - focusing on history feature
+    
+    // Debug button removed - issue fixed
     
 
     
@@ -2345,5 +3433,6 @@ window.TabManager = TabManager;
 window.SortManager = SortManager;
 window.IconManager = IconManager;
 window.EventHandlers = EventHandlers;
+window.HistoryManager = HistoryManager;
 
 

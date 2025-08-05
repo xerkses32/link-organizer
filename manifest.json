@@ -3,11 +3,17 @@
   "name": "Link Organizer",
   "version": "1.0",
   "description": "Organisiere deine gespeicherten Links in Ordnern.",
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Link Organizer - Aktuellen Tab speichern"
   },
-  "permissions": ["tabs", "storage", "activeTab", "notifications", "clipboardWrite"],
+  "permissions": ["tabs", "storage", "activeTab", "notifications", "clipboardWrite", "history", "contextMenus"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
@@ -20,5 +26,8 @@
       },
       "description": "Aktuellen Tab speichern"
     }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'"
   }
 }

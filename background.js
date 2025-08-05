@@ -1,13 +1,78 @@
 // Background Script für Link Organizer
-// Reagiert auf Icon-Klicks und speichert den aktuellen Tab
+// Reagiert auf Icon-Klicks, Kontextmenüs und speichert den aktuellen Tab
 
 // Icon immer sichtbar machen
 chrome.action.setBadgeBackgroundColor({ color: '#10a37f' });
 
-// Icon-Klick-Handler - Einfach Popup öffnen
+// Kontextmenüs erstellen beim Installieren/Aktualisieren
+chrome.runtime.onInstalled.addListener(() => {
+  // Hauptmenü für Link Organizer
+  chrome.contextMenus.create({
+    id: "linkOrganizer",
+    title: "Link Organizer",
+    contexts: ["action"]
+  });
+
+  // Untermenüs
+  chrome.contextMenus.create({
+    id: "openLinkOrganizer",
+    parentId: "linkOrganizer",
+    title: "Link Organizer öffnen",
+    contexts: ["action"]
+  });
+
+  chrome.contextMenus.create({
+    id: "saveCurrentTab",
+    parentId: "linkOrganizer",
+    title: "Aktuellen Tab speichern",
+    contexts: ["action"]
+  });
+
+  chrome.contextMenus.create({
+    id: "separator1",
+    parentId: "linkOrganizer",
+    type: "separator",
+    contexts: ["action"]
+  });
+
+  chrome.contextMenus.create({
+    id: "openInNewTab",
+    parentId: "linkOrganizer",
+    title: "In neuem Tab öffnen",
+    contexts: ["action"]
+  });
+});
+
+// Icon-Klick-Handler - Popup öffnen
 chrome.action.onClicked.addListener(async (tab) => {
   // Popup öffnen
   chrome.action.openPopup();
+});
+
+// Kontextmenü-Handler
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  switch (info.menuItemId) {
+    case "openLinkOrganizer":
+      // Link Organizer in neuem Tab öffnen
+      chrome.tabs.create({ 
+        url: chrome.runtime.getURL('popup.html'),
+        active: true 
+      });
+      break;
+
+    case "saveCurrentTab":
+      // Aktuellen Tab speichern (Popup öffnen)
+      chrome.action.openPopup();
+      break;
+
+    case "openInNewTab":
+      // Link Organizer in neuem Tab öffnen (gleiche Funktion)
+      chrome.tabs.create({ 
+        url: chrome.runtime.getURL('popup.html'),
+        active: true 
+      });
+      break;
+  }
 });
 
 // URL-Validierung
