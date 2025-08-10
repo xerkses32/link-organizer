@@ -1017,20 +1017,25 @@ const EventHandlers = {
   },
 
   handleDragStart(e) {
-    State.draggedElement = e.target;
-    State.draggedElement.style.opacity = '0.5';
-    State.draggedElement.style.transform = 'scale(1.05)';
-    State.draggedElement.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+    // Always use the element that registered the listener
+    const li = e.currentTarget || e.target.closest('[data-link-id]');
+    if (!li) return;
+    State.draggedElement = li;
+
+    li.style.opacity = '0.5';
+    li.style.transform = 'scale(1.05)';
+    li.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', State.draggedElement.outerHTML);
-    
-    const linkId = State.draggedElement.dataset.linkId;
-    const linkIndex = State.draggedElement.dataset.index;
-    console.log('Drag start - Link ID:', linkId, 'Index:', linkIndex, 'Element:', State.draggedElement);
-    
-    // Store the link data in the transfer
+    e.dataTransfer.setData('text/html', li.outerHTML);
+
+    const linkId = li.dataset.linkId || '';
+    const linkIndex = li.dataset.index || '';
+    console.log('Drag start - Link ID:', linkId, 'Index:', linkIndex, 'Element:', li);
+
+    // Store the link data in the transfer (prefer stable ID)
     e.dataTransfer.setData('text/plain', linkId || `index-${linkIndex}`);
-    
+
     // Also store the current folder for reference
     e.dataTransfer.setData('application/json', JSON.stringify({
       linkId: linkId,
@@ -2256,7 +2261,7 @@ const LinkManager = {
     li.dataset.index = index;
     li.dataset.linkId = linkObj.id;
     
-         li.addEventListener('dragstart', EventHandlers.handleDragStart);
+    li.addEventListener('dragstart', EventHandlers.handleDragStart);
      li.addEventListener('dragover', this.handleDragOver);
      li.addEventListener('drop', this.handleDrop);
      li.addEventListener('dragenter', this.handleDragEnter);
@@ -2608,13 +2613,14 @@ const LinkManager = {
     }
   },
 
-        async moveLinkToFolder(draggedLinkId, targetFolderName, dragData = null) {
+    async moveLinkToFolder(draggedLinkId, targetFolderName, dragData = null) {
      const folders = await Storage.getFolders();
      
      // Ensure all links have IDs
      await this.ensureLinkIds(folders);
      
-     const sourceFolder = State.currentFolder;
+     // Use the folder captured at drag start if available; fallback to current
+     const sourceFolder = (dragData && dragData.sourceFolder) ? dragData.sourceFolder : State.currentFolder;
      const targetFolder = targetFolderName;
      
      if (sourceFolder === targetFolder) {
