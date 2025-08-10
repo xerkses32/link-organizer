@@ -1994,6 +1994,12 @@ const FolderManager = {
      async openFolder(name, links) {
      console.log('Opening folder:', name, 'with links:', links);
      
+     // Check if we're already in this folder
+     if (State.currentFolder === name) {
+       console.log('Already in folder:', name, '- skipping re-render');
+       return;
+     }
+     
      // Ensure links is an array
      if (!Array.isArray(links)) {
        console.warn('Links parameter is not an array:', links);
@@ -2179,7 +2185,7 @@ const LinkManager = {
       console.log('renderLinks called with:', links);
       console.log('State.currentFolder:', State.currentFolder);
       
-      // Only get fresh data from storage if no links are provided
+      // Only get fresh data from storage if no links are provided and we're not already rendering
       if (!links || links.length === 0) {
         if (State.currentFolder) {
           const folders = await Storage.getFolders();
@@ -2187,6 +2193,13 @@ const LinkManager = {
           console.log('No links provided, getting fresh links for folder:', State.currentFolder, freshLinks);
           links = freshLinks;
         }
+      }
+      
+      // Check if we already have the same links rendered
+      const existingLinks = Array.from(DOM.linkList.children);
+      if (existingLinks.length === links.length && links.length > 0) {
+        console.log('Links already rendered with same count, skipping re-render');
+        return;
       }
       
       // Ensure links is an array
@@ -2208,25 +2221,25 @@ const LinkManager = {
         return;
       }
       
-      console.log('Clearing linkList element');
-      Utils.clearElement(DOM.linkList);
-      
-      if (!links || links.length === 0) {
-        console.log('No links to render, showing empty state');
-        try {
-          DOM.emptyState.style.display = 'block';
-        } catch (error) {
-          console.error('Error showing empty state:', error);
-        }
-        return;
-      }
-      
-      console.log('Hiding empty state and rendering', links.length, 'links');
-      try {
-        DOM.emptyState.style.display = 'none';
-      } catch (error) {
-        console.error('Error hiding empty state:', error);
-      }
+             console.log('Clearing linkList element');
+       Utils.clearElement(DOM.linkList);
+       
+       if (!links || links.length === 0) {
+         console.log('No links to render, showing empty state');
+         try {
+           DOM.emptyState.style.display = 'block';
+         } catch (error) {
+           console.error('Error showing empty state:', error);
+         }
+         return;
+       }
+       
+       console.log('Hiding empty state and rendering', links.length, 'links');
+       try {
+         DOM.emptyState.style.display = 'none';
+       } catch (error) {
+         console.error('Error hiding empty state:', error);
+       }
        
        const sortedLinks = State.currentSort ? 
          SortManager.sortLinks(links, State.currentSort.field, State.currentSort.direction) : 
@@ -3197,6 +3210,7 @@ const TabManager = {
       
       // Update UI with error handling
       try {
+        // Always re-render when adding a new link
         await LinkManager.renderLinks(updatedLinks);
         await updateFolderCountDirect(State.currentFolder);
         // Don't call checkAndShowOnboarding here as it resets the view
