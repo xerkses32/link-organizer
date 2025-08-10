@@ -1995,21 +1995,22 @@ const FolderManager = {
      async openFolder(name, links) {
      console.log('Opening folder:', name, 'with links:', links);
      
-     // Check if we're already in this folder
-     if (State.currentFolder === name) {
-       console.log('Already in folder:', name, '- skipping re-render');
+     // ALWAYS get fresh links from storage to ensure consistency
+     const folders = await Storage.getFolders();
+     const freshLinks = folders[name] || [];
+     console.log('Using fresh links from storage for folder:', name, freshLinks);
+     
+     // Check if we're already in this folder with same content
+     if (State.currentFolder === name && 
+         JSON.stringify(State.currentLinks) === JSON.stringify(freshLinks)) {
+       console.log('Already in folder with same content:', name, '- skipping re-render');
        return;
      }
      
-     // Ensure links is an array
-     if (!Array.isArray(links)) {
-       console.warn('Links parameter is not an array:', links);
-       links = [];
-     }
-     
+     // Use fresh links instead of passed links for consistency
      State.update({
        currentFolder: name,
-       currentLinks: links
+       currentLinks: freshLinks
      });
      
      // Update active state in folder list
@@ -2087,7 +2088,7 @@ const FolderManager = {
      }
      
      // Keep header layout stable: do not hide controls, just disable
-     const hasLinks = Array.isArray(links) && links.length > 0;
+     const hasLinks = Array.isArray(freshLinks) && freshLinks.length > 0;
      if (DOM.searchInput) {
        DOM.searchInput.disabled = !hasLinks;
        DOM.searchInput.classList.toggle('is-disabled', !hasLinks);
@@ -2099,9 +2100,9 @@ const FolderManager = {
        DOM.openAllLinksBtn.classList.toggle('is-disabled', !hasLinks);
      }
      
-     // Render the provided links (don't overwrite with fresh data)
-     console.log('Rendering links in openFolder:', links);
-     await LinkManager.renderLinks(links);
+     // Render the fresh links for consistency
+     console.log('Rendering fresh links in openFolder:', freshLinks);
+     await LinkManager.renderLinks(freshLinks);
      SortManager.updateSortIndicators(); // Update sort indicators when opening folder
    },
 
