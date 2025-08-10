@@ -1098,7 +1098,7 @@ async loadFolders() {
         CONFIG.SVG_ICONS.map(icon => IconManager.loadSvgIcon(icon))
       );
       
-      Utils.clearElement(DOM.folderList);
+      DOM.folderList.innerHTML = ''; // Fast clear instead of while-loop
       
       // Get ordered folder names
       const folderNames = Object.keys(folders);
@@ -2076,14 +2076,14 @@ async loadFolders() {
          
          removeShareBtn.onclick = async () => {
            try {
-             await this.removeShare(name, shares[name][0].code);
-             // Hide the share code display
-             if (shareCodeDisplaySection) {
-               shareCodeDisplaySection.classList.remove('is-visible');
-               shareCodeDisplaySection.classList.add('is-hidden');
-             }
-             // Reload folders to update share indicators
-             await this.loadFolders();
+                       await this.removeShare(name, shares[name][0].code);
+          // Hide the share code display
+          if (shareCodeDisplaySection) {
+            shareCodeDisplaySection.classList.remove('is-visible');
+            shareCodeDisplaySection.classList.add('is-hidden');
+          }
+          // Update only share indicators, not full reload
+          await this.updateFolderShareIndicators();
              Utils.showMessage('Teilen erfolgreich beendet.');
            } catch (error) {
              Utils.showMessage('Fehler beim Beenden des Teilens: ' + error.message, 'error');
@@ -2197,7 +2197,36 @@ async loadFolders() {
      } catch (error) {
        Utils.showMessage('Fehler beim Öffnen des Share-Codes: ' + error.message, 'error');
      }
-   }
+   },
+
+  // Efficient update functions to avoid full reload
+  async updateFolderShareIndicators() {
+    try {
+      const shares = await this.getSharedFolders();
+      const folderItems = document.querySelectorAll('#folderList li[data-folder-name]');
+      
+      folderItems.forEach(item => {
+        const folderName = item.dataset.folderName;
+        const shareIndicator = item.querySelector('.folder-share-indicator');
+        
+        if (shares[folderName] && shares[folderName].length > 0) {
+          if (!shareIndicator) {
+            // Add share indicator
+            const newIndicator = document.createElement('span');
+            newIndicator.className = 'folder-share-indicator';
+            newIndicator.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3C15 2.44772 15.4477 2 16 2C19.3137 2 22 4.68629 22 8V16C22 19.3137 19.3137 22 16 22H8C4.68629 22 2 19.3137 2 16C2 15.4477 2.44772 15 3 15C3.55228 15 4 15.4477 4 16C4 18.2091 5.79086 20 8 20H16C18.2091 20 20 18.2091 20 16V8C20 5.79086 18.2091 4 16 4C15.4477 4 15 3.55228 15 3Z"/></svg>`;
+            item.querySelector('.folder-name').appendChild(newIndicator);
+          }
+        } else {
+          if (shareIndicator) {
+            shareIndicator.remove();
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error updating share indicators:', error);
+    }
+  }
 };
 
 // ===== LINK MANAGEMENT =====
@@ -2239,8 +2268,8 @@ const LinkManager = {
         return;
       }
       
-             console.log('Clearing linkList element');
-       Utils.clearElement(DOM.linkList);
+             console.log('Clearing linkList element fast');
+       DOM.linkList.innerHTML = ''; // Fast clear instead of while-loop
        
        if (!links || links.length === 0) {
          console.log('No links to render, showing empty state');
