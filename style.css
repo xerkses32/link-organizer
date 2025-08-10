@@ -620,6 +620,19 @@ button:disabled {
   pointer-events: none;
 }
 
+/* Consistent visibility classes to prevent layout jumping */
+.is-hidden {
+  display: none !important;
+}
+
+.is-visible {
+  display: block !important;
+}
+
+.is-flex-visible {
+  display: flex !important;
+}
+
 .full-page-link {
   color: var(--text-secondary);
   text-decoration: none;

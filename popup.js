@@ -1082,7 +1082,11 @@ const EventHandlers = {
 
 // ===== FOLDER MANAGEMENT =====
 const FolderManager = {
-  async loadFolders() {
+  // Debouncing for folder switching
+  _folderSwitchDebounceTimer: null,
+  _debouncedOpenFolder: null,
+
+async loadFolders() {
     try {
       const folders = await Storage.getFolders();
       const folderOrder = await Storage.get('folderOrder', []);
@@ -1206,16 +1210,10 @@ const FolderManager = {
       li.classList.add('active');
     }
     
-    // Event handlers
-    li.addEventListener("click", (e) => {
-      if (!e.target.closest('.folder-actions')) {
-        this.openFolder(name, links || []);
-      }
-    });
-    
+    // Single click handler - only on folderName to avoid double events
     folderName.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.openFolder(name, links || []);
+      this.debouncedOpenFolder(name, links || []);
     });
     
     // Drag & drop handlers for links (when dragging links TO folders)
@@ -1588,11 +1586,13 @@ const FolderManager = {
           currentLinks: []
         });
         DOM.selectedFolderTitle.textContent = 'Links';
-        DOM.saveLinkBtn.disabled = true;
-        DOM.exportCsvBtn.classList.add('is-disabled');
-        DOM.searchInput.disabled = true;
-        DOM.searchInput.classList.add('is-disabled');
-        await LinkManager.renderLinks([]);
+            DOM.saveLinkBtn.disabled = true;
+    DOM.exportCsvBtn.classList.add('is-disabled');
+    DOM.searchInput.disabled = true;
+    DOM.searchInput.classList.add('is-disabled');
+    
+    // No folder selected, render empty
+    await LinkManager.renderLinks([]);
       }
       
       await this.loadFolders();
@@ -1992,13 +1992,21 @@ const FolderManager = {
      return linksContent;
    },
 
-     async openFolder(name, links) {
-     console.log('Opening folder:', name, 'with links:', links);
+     // Debounced folder opening to prevent rapid switching
+     debouncedOpenFolder(name, passedLinks) {
+       clearTimeout(this._folderSwitchDebounceTimer);
+       this._folderSwitchDebounceTimer = setTimeout(() => {
+         this.openFolder(name, passedLinks);
+       }, 50);
+     },
+
+     async openFolder(name, passedLinks) {
+     console.log('Opening folder:', name, 'with passed links:', passedLinks);
      
      // ALWAYS get fresh links from storage to ensure consistency
      const folders = await Storage.getFolders();
      const freshLinks = folders[name] || [];
-     console.log('Using fresh links from storage for folder:', name, freshLinks);
+     console.log('Fresh links from storage for folder:', name, freshLinks);
      
      // Check if we're already in this folder with same content
      if (State.currentFolder === name && 
@@ -2036,7 +2044,8 @@ const FolderManager = {
      if (shares[name] && shares[name].length > 0) {
        // Show share code display and populate with first share code
        if (shareCodeDisplaySection) {
-         shareCodeDisplaySection.style.display = 'block';
+         shareCodeDisplaySection.classList.remove('is-hidden');
+         shareCodeDisplaySection.classList.add('is-visible');
        }
        if (displayedShareCode) {
          displayedShareCode.value = shares[name][0].code;
@@ -2070,7 +2079,8 @@ const FolderManager = {
              await this.removeShare(name, shares[name][0].code);
              // Hide the share code display
              if (shareCodeDisplaySection) {
-               shareCodeDisplaySection.style.display = 'none';
+               shareCodeDisplaySection.classList.remove('is-visible');
+               shareCodeDisplaySection.classList.add('is-hidden');
              }
              // Reload folders to update share indicators
              await this.loadFolders();
@@ -2083,7 +2093,8 @@ const FolderManager = {
      } else {
        // Hide share code display if folder is not shared
        if (shareCodeDisplaySection) {
-         shareCodeDisplaySection.style.display = 'none';
+         shareCodeDisplaySection.classList.remove('is-visible');
+         shareCodeDisplaySection.classList.add('is-hidden');
        }
      }
      
@@ -2196,27 +2207,23 @@ const LinkManager = {
       console.log('renderLinks called with:', links);
       console.log('State.currentFolder:', State.currentFolder);
       
-      // Only get fresh data from storage if no links are provided and we're not already rendering
-      if (!links || links.length === 0) {
-        if (State.currentFolder) {
-          const folders = await Storage.getFolders();
-          const freshLinks = folders[State.currentFolder] || [];
-          console.log('No links provided, getting fresh links for folder:', State.currentFolder, freshLinks);
-          links = freshLinks;
-        }
-      }
+      // NEVER fetch from storage here - links should ALWAYS be provided by caller
+      // This prevents racing conditions and double-fetching
       
-      // Check if we already have the same links rendered
-      const existingLinks = Array.from(DOM.linkList.children);
-      if (existingLinks.length === links.length && links.length > 0) {
-        console.log('Links already rendered with same count, skipping re-render');
-        return;
-      }
-      
-      // Ensure links is an array
-      if (!Array.isArray(links)) {
-        console.error('Links is not an array:', links);
+      // Ensure links is always provided and is an array
+      if (!links) {
+        console.error('renderLinks called without links - this should not happen');
         links = [];
+      }
+      
+      // Improved skip logic: compare actual content, not just count
+      const existingLinksData = Array.from(DOM.linkList.children).map(el => el.dataset.linkId);
+      const newLinksData = links.map(link => link.id || Utils.generateId());
+      
+      if (existingLinksData.length === newLinksData.length && 
+          existingLinksData.every((id, index) => id === newLinksData[index])) {
+        console.log('Same links already rendered, skipping re-render');
+        return;
       }
       
       console.log('Final links to render:', links);
@@ -2238,7 +2245,8 @@ const LinkManager = {
        if (!links || links.length === 0) {
          console.log('No links to render, showing empty state');
          try {
-           DOM.emptyState.style.display = 'block';
+           DOM.emptyState.classList.remove('is-hidden');
+           DOM.emptyState.classList.add('is-visible');
          } catch (error) {
            console.error('Error showing empty state:', error);
          }
@@ -2247,7 +2255,8 @@ const LinkManager = {
        
        console.log('Hiding empty state and rendering', links.length, 'links');
        try {
-         DOM.emptyState.style.display = 'none';
+         DOM.emptyState.classList.remove('is-visible');
+         DOM.emptyState.classList.add('is-hidden');
        } catch (error) {
          console.error('Error hiding empty state:', error);
        }
@@ -2508,8 +2517,9 @@ const LinkManager = {
         folders[State.currentFolder][index].name = newName || null;
         await Storage.setFolders(folders);
         
-        State.update({ currentLinks: folders[State.currentFolder] });
-        await this.renderLinks(State.currentLinks);
+        const freshLinks = folders[State.currentFolder];
+        State.update({ currentLinks: freshLinks });
+        await this.renderLinks(freshLinks);
         Utils.showMessage('Link erfolgreich umbenannt.');
       } catch (error) {
         Utils.showMessage('Fehler beim Umbenennen: ' + error.message, 'error');
@@ -2841,14 +2851,15 @@ const LinkManager = {
          // Update current view if we're in the source folder
      if (State.currentFolder === sourceFolder) {
        State.update({ currentLinks: sourceLinks });
-       await this.renderLinks([]); // Force fresh render
+       await this.renderLinks(sourceLinks);
      }
      
      // Update current view if we're in the target folder
      if (State.currentFolder === targetFolder) {
-       State.update({ currentLinks: folders[targetFolder] });
-       console.log('Updating target folder view with links:', folders[targetFolder]);
-       await this.renderLinks([]); // Force fresh render
+       const targetLinks = folders[targetFolder];
+       State.update({ currentLinks: targetLinks });
+       console.log('Updating target folder view with links:', targetLinks);
+       await this.renderLinks(targetLinks);
      }
      
      // Update folder counts in the UI without full reload
