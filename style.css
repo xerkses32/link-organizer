@@ -128,13 +128,13 @@ body.full-page .app-container {
 body.full-page .main-content {
   flex: 1;
   max-width: none;
-  overflow-y: auto;
+  overflow: hidden; /* Kein Scroll im Main-Content */
   height: calc(100vh - 60px); /* Abzüglich Header */
 }
 
 body.full-page .links-table {
-  max-height: none;
   flex: 1;
+  overflow-y: auto; /* Nur die Links-Tabelle scrollt */
   height: calc(100vh - 120px); /* Abzüglich Header und Quick-Save */
 }
 
