@@ -53,22 +53,55 @@ body {
 }
 
 /* Full-Page Modus Anpassungen */
+body.full-page {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 body.full-page .app-container {
   height: 100vh;
   width: 100vw;
   border: none;
   border-radius: 0;
+  margin: 0;
+  padding: 0;
 }
 
 body.full-page .main-content {
   flex: 1;
   max-width: none;
   overflow-y: auto;
+  height: calc(100vh - 60px); /* Abzüglich Header */
 }
 
 body.full-page .links-table {
   max-height: none;
   flex: 1;
+  height: calc(100vh - 120px); /* Abzüglich Header und Quick-Save */
+}
+
+body.full-page .sidebar {
+  height: 100vh;
+  overflow-y: auto;
+}
+
+body.full-page .header-row {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 20px;
+}
+
+body.full-page .quick-save-row {
+  position: sticky;
+  top: 60px;
+  background: white;
+  z-index: 9;
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 20px;
 }
 
 .sidebar {
@@ -122,11 +155,53 @@ body.full-page .links-table {
   opacity: 0.6;
 }
 
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .sidebar h2 {
   font-size: 14px;
-  margin: 0 0 8px 0;
+  margin: 0;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.sidebar-full-page-btn {
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  outline: none;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sidebar-full-page-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.sidebar-full-page-btn:active {
+  transform: translateY(1px);
+}
+
+.sidebar-full-page-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.sidebar-full-page-btn span {
+  white-space: nowrap;
 }
 
 input {
@@ -528,6 +603,35 @@ button:disabled {
   color: var(--text-muted);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.full-page-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.full-page-link:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+  transform: translateY(-1px);
+}
+
+.full-page-link svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+
+.full-page-link:hover svg {
+  transform: scale(1.1);
 }
 
 .copy-link {

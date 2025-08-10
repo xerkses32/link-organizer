@@ -8,9 +8,18 @@
 </head>
 <body>
   <div class="app-container" id="appContainer">
-    <!-- Sidebar - Fixed -->
-    <div class="sidebar">
-      <h2>Ordner</h2>
+            <!-- Sidebar - Fixed -->
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <h2>Ordner</h2>
+            <button id="sidebarFullPageBtn" class="sidebar-full-page-btn" title="In neuem Tab öffnen">
+              <svg width="14" height="14" viewBox="0 0 36 36" fill="currentColor">
+                <path d="M27,33H5a2,2,0,0,1-2-2V9A2,2,0,0,1,5,7H15V9H5V31H27V21h2V31A2,2,0,0,1,27,33Z"></path>
+                <path d="M18,3a1,1,0,0,0,0,2H29.59L15.74,18.85a1,1,0,1,0,1.41,1.41L31,6.41V18a1,1,0,0,0,2,0V3Z"></path>
+              </svg>
+              <span>In neuem Tab öffnen</span>
+            </button>
+          </div>
       <div class="folder-input-container">
         <input type="text" id="newFolderName" placeholder="Neuer Ordner...">
       </div>
@@ -34,11 +43,18 @@
       <!-- Header Row -->
       <div class="header-row">
         <h1 id="selectedFolderTitle">Link Organizer</h1>
-        <div class="header-actions">
-          <a href="#" id="openAllLinksBtn" class="open-all-link">Alle öffnen</a>
-          <a href="#" id="historyToggleBtn" class="history-link">Browserverlauf</a>
-          <a href="#" id="exportCsvBtn" class="export-link">Export CSV</a>
-        </div>
+                    <div class="header-actions">
+              <a href="#" id="openAllLinksBtn" class="open-all-link">Alle öffnen</a>
+              <a href="#" id="historyToggleBtn" class="history-link">Browserverlauf</a>
+              <a href="#" id="exportCsvBtn" class="export-link">Export CSV</a>
+              <a href="#" id="fullPageBtn" class="full-page-link" title="In neuem Tab öffnen">
+                <svg width="14" height="14" viewBox="0 0 36 36" fill="currentColor">
+                  <path d="M27,33H5a2,2,0,0,1-2-2V9A2,2,0,0,1,5,7H15V9H5V31H27V21h2V31A2,2,0,0,1,27,33Z"></path>
+                  <path d="M18,3a1,1,0,0,0,0,2H29.59L15.74,18.85a1,1,0,1,0,1.41,1.41L31,6.41V18a1,1,0,0,0,2,0V3Z"></path>
+                </svg>
+                Vollbild
+              </a>
+            </div>
       </div>
 
       <!-- Quick Save Interface -->

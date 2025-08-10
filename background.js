@@ -53,9 +53,9 @@ chrome.action.onClicked.addListener(async (tab) => {
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   switch (info.menuItemId) {
     case "openLinkOrganizer":
-      // Link Organizer in neuem Tab öffnen
+      // Link Organizer in neuem Tab öffnen (Full-Page)
       chrome.tabs.create({ 
-        url: chrome.runtime.getURL('popup.html'),
+        url: chrome.runtime.getURL('popup.html?fullpage=true'),
         active: true 
       });
       break;
@@ -66,9 +66,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       break;
 
     case "openInNewTab":
-      // Link Organizer in neuem Tab öffnen (gleiche Funktion)
+      // Link Organizer in neuem Tab öffnen (Full-Page)
       chrome.tabs.create({ 
-        url: chrome.runtime.getURL('popup.html'),
+        url: chrome.runtime.getURL('popup.html?fullpage=true'),
         active: true 
       });
       break;

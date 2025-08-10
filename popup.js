@@ -30,7 +30,9 @@ const   DOM = {
     selectAllHistory: document.getElementById("selectAllHistory"),
     selectedHistoryCount: document.getElementById("selectedHistoryCount"),
     historyList: document.getElementById("historyList"),
-    addSelectedToFolderBtn: document.getElementById("addSelectedToFolderBtn")
+    addSelectedToFolderBtn: document.getElementById("addSelectedToFolderBtn"),
+    fullPageBtn: document.getElementById("fullPageBtn"),
+    sidebarFullPageBtn: document.getElementById("sidebarFullPageBtn")
   };
 
 // ===== STATE MANAGEMENT =====
@@ -3324,13 +3326,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.innerWidth > 600) {
       document.body.classList.add('full-page');
       console.log('Full-Page Modus aktiviert');
+      
+      // Vollbild-Button im Full-Page Modus ausblenden
+      if (DOM.fullPageBtn) {
+        DOM.fullPageBtn.style.display = 'none';
+      }
+      
+      // Sidebar Vollbild-Button im Full-Page Modus ausblenden
+      if (DOM.sidebarFullPageBtn) {
+        DOM.sidebarFullPageBtn.style.display = 'none';
+      }
     }
     
     // Verify all DOM elements are available
     const requiredElements = [
       'folderList', 'linkList', 'newFolderName', 'createFolderBtn', 
       'saveLinkBtn', 'exportCsvBtn', 'openAllLinksBtn', 'searchInput', 'selectedFolderTitle', 
-      'messagesContainer', 'emptyState', 'shareCodeInput', 'enterShareCodeBtn'
+      'messagesContainer', 'emptyState', 'shareCodeInput', 'enterShareCodeBtn', 'fullPageBtn', 'sidebarFullPageBtn'
     ];
     
     const missingElements = requiredElements.filter(id => !document.getElementById(id));
@@ -3363,6 +3375,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     DOM.exportCsvBtn.addEventListener('click', () => LinkManager.exportCsv());
     DOM.openAllLinksBtn.addEventListener('click', () => LinkManager.openAllLinks());
     DOM.enterShareCodeBtn.addEventListener('click', () => FolderManager.enterShareCode());
+    
+    // Full-Page Button Event Handler
+    DOM.fullPageBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ 
+        url: chrome.runtime.getURL('popup.html?fullpage=true') 
+      });
+      window.close(); // Popup schließen
+    });
+    
+    // Sidebar Full-Page Button Event Handler
+    DOM.sidebarFullPageBtn.addEventListener('click', () => {
+      chrome.tabs.create({ 
+        url: chrome.runtime.getURL('popup.html?fullpage=true') 
+      });
+      window.close(); // Popup schließen
+    });
     
     // History Overlay Event Listeners
     DOM.historyToggleBtn.addEventListener('click', () => HistoryManager.toggleHistoryOverlay());

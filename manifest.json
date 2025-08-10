@@ -4,11 +4,9 @@
   "version": "1.0",
   "description": "Organisiere deine gespeicherten Links in Ordnern.",
   "icons": {
-    "16": "icon-16.png",
-    "32": "icon-32.png",
-    "48": "icon-48.png",
-    "128": "icon-128.png"
+    "128": "icon.svg"
   },
+
   "action": {
     "default_popup": "popup.html",
     "default_title": "Link Organizer - Aktuellen Tab speichern"
