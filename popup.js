@@ -3292,7 +3292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const requiredElements = [
       'folderList', 'linkList', 'newFolderName', 'createFolderBtn', 
       'saveLinkBtn', 'exportCsvBtn', 'openAllLinksBtn', 'searchInput', 'selectedFolderTitle', 
-      'messagesContainer', 'emptyState', 'shareCodeInput', 'enterShareCodeBtn', 'fullPageBtn', 'sidebarFullPageBtn'
+      'messagesContainer', 'emptyState', 'fullPageBtn', 'sidebarFullPageBtn'
     ];
     
     const missingElements = requiredElements.filter(id => !document.getElementById(id));
