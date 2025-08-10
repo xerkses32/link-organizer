@@ -74,15 +74,14 @@ body:not(.full-page) .main-content {
 
 body:not(.full-page) #quickSaveInterface {
   position: relative; /* Nicht sticky in Popup */
-  top: 0; /* Feste Position für stabiles Layout */
-  background: white; /* Konsistenter Hintergrund */
+  top: 0;
+  background: white;
   z-index: auto;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
-  margin: 0; /* Keine variablen Margins */
-  height: 120px; /* Feste Höhe statt min-height - genug für Button + Tipp */
+  margin: 0;
+  min-height: 88px; /* 36px row + 8px gap + 28px tip + padding */
   box-sizing: border-box;
-  overflow: hidden; /* Verhindert Layout-Breaking */
 }
 
 /* Full-Page Modus Anpassungen */
@@ -1548,23 +1547,22 @@ button:disabled {
 #quickSaveInterface {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px; /* row + tip Abstand */
   position: sticky;
   top: 60px;
   background: white;
   z-index: 9;
   padding: 12px 0;
   border-bottom: 1px solid var(--border-color);
-  height: 120px; /* Feste Höhe auch für Full-Page */
+  min-height: 88px; /* 36 + 8 + 28 + padding */
   box-sizing: border-box;
-  overflow: hidden; /* Verhindert Content-Overflow */
 }
 
 .quick-save-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  height: 36px; /* Fixe Höhe für Button + Suche */
 }
 
 /* Tab info styles removed - no longer needed */
@@ -1615,8 +1613,14 @@ button:disabled {
   background: rgba(16, 163, 127, 0.05);
   border: 1px solid rgba(16, 163, 127, 0.2);
   border-radius: var(--border-radius-sm);
-  padding: 8px 12px;
-  margin-top: 8px;
+  padding: 4px 12px;
+  height: 28px; /* Fixe Höhe für stabilen Platz */
+}
+
+/* Sichtbarkeit ohne Layout zu verändern */
+.is-invisible {
+  visibility: hidden !important;
+  pointer-events: none;
 }
 
 .quick-save-info p {

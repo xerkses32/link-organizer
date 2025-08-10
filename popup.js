@@ -3335,8 +3335,7 @@ const OnboardingManager = {
     // Hide other UI elements during onboarding
     const quickSaveInfo = document.querySelector('.quick-save-info');
     if (quickSaveInfo) {
-      quickSaveInfo.classList.remove('is-visible');
-      quickSaveInfo.classList.add('is-hidden');
+      quickSaveInfo.classList.add('is-invisible'); // behält Platz, versteckt Inhalt
     }
   },
 
@@ -3356,8 +3355,7 @@ const OnboardingManager = {
     // Show other UI elements
     const quickSaveInfo = document.querySelector('.quick-save-info');
     if (quickSaveInfo) {
-      quickSaveInfo.classList.remove('is-hidden');
-      quickSaveInfo.classList.add('is-visible');
+      quickSaveInfo.classList.remove('is-invisible');
     }
   },
 
