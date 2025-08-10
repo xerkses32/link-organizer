@@ -183,21 +183,14 @@ body.full-page .quick-save-row {
   margin-right: -12px;
   display: flex;
   align-items: center;
-  justify-content: center; /* Logo mittig platzieren */
+  justify-content: flex-start; /* Logo links positionieren */
+  padding-left: 20px; /* Logo von links einrücken */
   height: 36px; /* kleinere Höhe */
-  padding: 0 10px;
   margin-top: -36px; /* überlagert den Scroll-Content (Glass sichtbar) */
-  border-radius: 10px 10px 0 0;
-  /* Glass-Effekt */
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0.10),
-    rgba(255, 255, 255, 0.05)
-  ); /* subtiler, aber erkennbar */
-  backdrop-filter: blur(14px) saturate(170%);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-  box-shadow: inset 0 0 0 1px rgba(229, 231, 235, 0.25);
-  margin-top: auto; /* an das untere Ende drücken */
+  /* Minimaler Glass-Effekt - nur bei scrollendem Content sichtbar */
+  background: transparent;
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   overflow: hidden; /* Logo darf nicht herausragen */
   z-index: 2;
   pointer-events: none; /* Wrapper nicht interaktiv wahrnehmen */
