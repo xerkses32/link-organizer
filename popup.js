@@ -1589,7 +1589,7 @@ const FolderManager = {
         });
         DOM.selectedFolderTitle.textContent = 'Links';
         DOM.saveLinkBtn.disabled = true;
-        DOM.exportCsvBtn.style.display = 'none';
+        DOM.exportCsvBtn.classList.add('is-disabled');
         DOM.searchInput.style.display = 'none';
         await LinkManager.renderLinks([]);
       }
@@ -2085,11 +2085,18 @@ const FolderManager = {
        }
      }
      
-     // Show/hide search, export and open all based on links availability
-     const hasLinks = links && links.length > 0;
-     DOM.searchInput.style.display = hasLinks ? 'inline-block' : 'none';
-     DOM.exportCsvBtn.style.display = hasLinks ? 'inline-block' : 'none';
-     DOM.openAllLinksBtn.style.display = hasLinks ? 'inline-block' : 'none';
+     // Keep header layout stable: do not hide controls, just disable
+     const hasLinks = Array.isArray(links) && links.length > 0;
+     if (DOM.searchInput) {
+       DOM.searchInput.disabled = !hasLinks;
+       DOM.searchInput.classList.toggle('is-disabled', !hasLinks);
+     }
+     if (DOM.exportCsvBtn) {
+       DOM.exportCsvBtn.classList.toggle('is-disabled', !hasLinks);
+     }
+     if (DOM.openAllLinksBtn) {
+       DOM.openAllLinksBtn.classList.toggle('is-disabled', !hasLinks);
+     }
      
      // Render the provided links (don't overwrite with fresh data)
      console.log('Rendering links in openFolder:', links);
@@ -2575,7 +2582,7 @@ const LinkManager = {
       
       // Hide export and copy links if no links left
       if (!freshLinks || freshLinks.length === 0) {
-        DOM.exportCsvBtn.style.display = 'none';
+        DOM.exportCsvBtn.classList.add('is-disabled');
       }
       
       await this.renderLinks(freshLinks);
@@ -3203,9 +3210,8 @@ const TabManager = {
       
       if (updatedLinks && updatedLinks.length > 0) {
         if (DOM.exportCsvBtn) {
-          DOM.exportCsvBtn.style.display = 'inline-block';
+          DOM.exportCsvBtn.classList.remove('is-disabled');
         }
-            // Copy button removed - focusing on history feature
       }
       
       // Update UI with error handling

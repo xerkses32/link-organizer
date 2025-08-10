@@ -494,7 +494,7 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  min-height: 40px; /* Mindesthöhe für Header */
+  min-height: 44px; /* Stabilere Mindesthöhe für Header */
   gap: 12px; /* Abstand zwischen Titel und Actions */
 }
 
@@ -522,6 +522,11 @@ button:disabled {
   box-sizing: border-box;
   display: flex;
   align-items: center;
+}
+
+.search-input.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .search-input:focus {
@@ -608,6 +613,11 @@ button:disabled {
   color: var(--text-muted);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.header-actions a.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .full-page-link {
