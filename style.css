@@ -171,21 +171,19 @@ body.full-page .quick-save-row {
   flex-direction: column;
   gap: 12px;
   flex-shrink: 0; /* Verhindert Schrumpfen */
+  position: relative; /* Für absolute Positionierung des Logo-Wrappers */
 }
 
 /* Sidebar Logo Wrapper - full width glass effect at bottom */
 .sidebar-logo-wrapper {
-  position: sticky;
-  bottom: 0;
+  position: absolute;
+  bottom: 0; /* absolut am Bottom der Sidebar */
   left: 0;
-  width: calc(100% + 24px); /* volle Breite inkl. Sidebar-Padding */
-  margin-left: -12px;
-  margin-right: -12px;
+  right: 0; /* volle Breite */
   display: flex;
   align-items: center;
   justify-content: center; /* Logo mittig positionieren */
   height: 60px; /* feste Höhe für Logo */
-  margin-top: auto; /* drückt sich an das Ende der Flexbox */
   /* Glass-Effekt über scrollbarem Content */
   background: rgba(255, 255, 255, 0.02); /* minimaler Hintergrund für Glass */
   backdrop-filter: blur(12px) saturate(140%);
