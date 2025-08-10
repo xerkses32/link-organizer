@@ -799,13 +799,16 @@ button:disabled {
   grid-template-columns: 1fr 120px 80px;
   gap: 16px;
   padding: 12px 16px;
-  background: rgba(249, 250, 251, 0.5);
+  background: rgba(249, 250, 251, 0.8);
   border-bottom: 1px solid rgba(229, 231, 235, 0.3);
   font-weight: 500;
   font-size: 11px;
   color: var(--text-secondary);
   letter-spacing: 0.2px;
   flex-shrink: 0; /* Header nicht schrumpfen lassen */
+  position: sticky; /* Immer oben bleiben */
+  top: 0;
+  z-index: 1;
 }
 
 .col-name {
@@ -854,9 +857,9 @@ button:disabled {
 #linkList {
   padding: 0;
   margin: 0;
-  overflow-y: auto; /* Scroll aktivieren */
+  /* Kein eigener Scroll hier, Scrollcontainer ist .links-table */
+  overflow: visible;
   flex: 1; /* Nimmt verfügbaren Platz ein */
-  max-height: 300px; /* Höhe begrenzen für Popup */
   min-height: 100px; /* Minimale Höhe */
 }
 
