@@ -19,8 +19,7 @@ const   DOM = {
     selectedFolderTitle: document.getElementById("selectedFolderTitle"),
     messagesContainer: document.getElementById("messagesContainer"),
     emptyState: document.getElementById("emptyState"),
-    shareCodeInput: document.getElementById("shareCodeInput"),
-    enterShareCodeBtn: document.getElementById("enterShareCodeBtn"),
+    // Share Code removed
     // History Overlay Elements
     historyOverlay: document.getElementById("historyOverlay"),
     historyToggleBtn: document.getElementById("historyToggleBtn"),
@@ -1754,7 +1753,7 @@ async loadFolders() {
      return dialog;
    },
 
-   async getFolderLinkCount(folderName) {
+  async getFolderLinkCount(folderName) {
      try {
        const folders = await Storage.getFolders();
        const links = folders[folderName] || [];
@@ -1794,173 +1793,15 @@ async loadFolders() {
       }
     },
 
-    async generateShareCodeAndDisplay(folderName, dialog) {
-      try {
-        const activeTab = dialog.querySelector('.permission-tab.active');
-        
-        if (!activeTab) {
-          Utils.showMessage('Bitte eine Berechtigung auswählen.', 'error');
-          return;
-        }
-        
-        const permission = activeTab.dataset.permission;
-        
-        // Generate share code
-        const shareCode = this.generateShareCodeString(folderName, permission);
-        console.log('Share code generated:', shareCode);
-        
-        // Store share data
-        await this.storeShareData(folderName, permission, shareCode);
-        
-        // Display the code in the dialog
-        const codeDisplay = dialog.querySelector('#shareCodeDisplay');
-        const codeInput = dialog.querySelector('#generatedCode');
-        
-        if (codeDisplay && codeInput) {
-          codeInput.value = shareCode;
-          codeDisplay.style.display = 'block';
-          
-          // Change button text
-          const generateBtn = dialog.querySelector('#generateShareBtn');
-          if (generateBtn) {
-            generateBtn.innerHTML = `
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Neuer Code
-            `;
-          }
-        }
-        
-        Utils.showMessage(`✅ Share-Code generiert: ${shareCode}`);
-        
-        // Update the share code display in the detail view immediately
-        const displayedShareCode = document.getElementById('displayedShareCode');
-        const shareCodeDisplaySection = document.getElementById('shareCodeDisplaySection');
-        const copyDisplayedCodeBtn = document.getElementById('copyDisplayedCodeBtn');
-        
-              if (displayedShareCode && shareCodeDisplaySection) {
-        displayedShareCode.value = shareCode;
-        shareCodeDisplaySection.classList.remove('is-hidden');
-        shareCodeDisplaySection.classList.add('is-visible');
-          
-          // Update copy functionality
-          if (copyDisplayedCodeBtn) {
-            copyDisplayedCodeBtn.onclick = async () => {
-              try {
-                await navigator.clipboard.writeText(shareCode);
-                Utils.showMessage('Share-Code in Zwischenablage kopiert.');
-              } catch (error) {
-                Utils.showMessage('Fehler beim Kopieren: ' + error.message, 'error');
-              }
-            };
-          }
-          
-          // Update remove share functionality
-          const removeShareBtn = document.getElementById('removeShareBtn');
-          if (removeShareBtn) {
-            // Load trash SVG icon
-            const trashIcon = await IconManager.loadSvgIcon('trash.svg');
-            if (trashIcon) {
-              trashIcon.classList.add('delete-icon');
-              IconManager.removeInlineStyles(trashIcon);
-              removeShareBtn.appendChild(trashIcon);
-            }
-            
-            removeShareBtn.onclick = async () => {
-              try {
-                await FolderManager.removeShare(folderName, shareCode);
-                            // Hide the share code display  
-            if (shareCodeDisplaySection) {
-              shareCodeDisplaySection.classList.remove('is-visible');
-              shareCodeDisplaySection.classList.add('is-hidden');
-            }
-                // Reload folders to update share indicators
-                await FolderManager.loadFolders();
-                Utils.showMessage('Teilen erfolgreich beendet.');
-              } catch (error) {
-                Utils.showMessage('Fehler beim Beenden des Teilens: ' + error.message, 'error');
-              }
-            };
-          }
-        }
-        
-        return shareCode;
-      } catch (error) {
-        Utils.showMessage('Fehler beim Generieren: ' + error.message, 'error');
-        throw error;
-      }
-    },
+    async generateShareCodeAndDisplay() { return; },
 
-   generateShareCodeString(folderName, permission) {
-     // Kryptographisch sichere Zufallszahlen
-     const array = new Uint8Array(8);
-     crypto.getRandomValues(array);
-     const randomPart = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-     
-     const timestamp = Date.now();
-     const code = `LINK-${timestamp}-${randomPart}`.toUpperCase();
-     console.log('Generated secure share code:', code);
-     return code;
-   },
+   generateShareCodeString() { return ''; },
 
-   async storeShareData(folderName, permission, code) {
-     try {
-       console.log('Storing share data for folder:', folderName, 'permission:', permission, 'code:', code);
-       const shares = await Storage.get('shares', {});
-       console.log('Current shares:', shares);
-       
-       if (!shares[folderName]) {
-         shares[folderName] = [];
-       }
-       
-       const newShare = {
-         permission,
-         code,
-         sharedAt: new Date().toISOString(),
-         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-       };
-       
-       shares[folderName].push(newShare);
-       console.log('Updated shares:', shares);
-       
-       await Storage.set({ shares });
-       console.log('Share data stored successfully');
-       
-     } catch (error) {
-       console.error('Error storing share data:', error);
-       throw error;
-     }
-   },
+   async storeShareData() { return; },
 
-   async getSharedFolders() {
-     try {
-       const shares = await Storage.get('shares', {});
-       return shares;
-     } catch (error) {
-       console.error('Error getting shared folders:', error);
-       return {};
-     }
-   },
+   async getSharedFolders() { return {}; },
 
-   async removeShare(folderName, code) {
-     try {
-       const shares = await Storage.get('shares', {});
-       
-       if (shares[folderName]) {
-         shares[folderName] = shares[folderName].filter(share => share.code !== code);
-         
-         if (shares[folderName].length === 0) {
-           delete shares[folderName];
-         }
-         
-         await Storage.set({ shares });
-         Utils.showMessage('Freigabe erfolgreich entfernt.');
-       }
-     } catch (error) {
-       Utils.showMessage('Fehler beim Entfernen der Freigabe: ' + error.message, 'error');
-     }
-   },
+   async removeShare() { return; },
 
    async copyFolderToClipboard(folderName) {
      try {
@@ -2038,7 +1879,7 @@ async loadFolders() {
      DOM.saveLinkBtn.disabled = !State.currentTab;
      
      // Check if folder is shared and show share code display
-     const shares = await this.getSharedFolders();
+     // Share Code removed
      const shareCodeDisplaySection = document.getElementById('shareCodeDisplaySection');
      const displayedShareCode = document.getElementById('displayedShareCode');
      const copyDisplayedCodeBtn = document.getElementById('copyDisplayedCodeBtn');
@@ -2202,9 +2043,9 @@ async loadFolders() {
    },
 
   // Efficient update functions to avoid full reload
-  async updateFolderShareIndicators() {
+   async updateFolderShareIndicators() {
     try {
-      const shares = await this.getSharedFolders();
+      const shares = {}; // removed
       const folderItems = document.querySelectorAll('#folderList li[data-folder-name]');
       
       folderItems.forEach(item => {
@@ -3104,9 +2945,9 @@ const IconManager = {
 
       const svg = tempDiv.querySelector('svg');
       if (svg) {
-        svg.classList.add("icon-svg");
+  svg.classList.add("icon-svg");
         this._cache.set(filename, svg.cloneNode(true));
-        return svg;
+  return svg;
       }
     } catch (error) {
       console.error('Error loading SVG:', error);
@@ -3473,9 +3314,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Debug - Current folder:', State.currentFolder);
     console.log('Debug - Current links:', State.currentLinks);
     
-    // Check and show onboarding if needed
-    await OnboardingManager.checkAndShowOnboarding();
-    OnboardingManager.setupOnboardingEvents();
+      // Check and show onboarding if needed
+      await OnboardingManager.checkAndShowOnboarding();
+      OnboardingManager.setupOnboardingEvents();
     
     // Event listeners
     DOM.createFolderBtn.addEventListener('click', () => FolderManager.createFolder());
@@ -3483,7 +3324,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     DOM.searchInput.addEventListener('input', () => LinkManager.handleSearch());
     DOM.exportCsvBtn.addEventListener('click', () => LinkManager.exportCsv());
     DOM.openAllLinksBtn.addEventListener('click', () => LinkManager.openAllLinks());
-    DOM.enterShareCodeBtn.addEventListener('click', () => FolderManager.enterShareCode());
+    // Share Code removed
     
     // Full-Page Button Event Handler
     DOM.fullPageBtn.addEventListener('click', (e) => {
