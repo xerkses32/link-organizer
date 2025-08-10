@@ -2085,7 +2085,7 @@ const FolderManager = {
      DOM.exportCsvBtn.style.display = hasLinks ? 'inline-block' : 'none';
      DOM.openAllLinksBtn.style.display = hasLinks ? 'inline-block' : 'none';
      
-     // Always render fresh links from storage
+     // Render the provided links (don't overwrite with fresh data)
      console.log('Rendering links in openFolder:', links);
      await LinkManager.renderLinks(links);
      SortManager.updateSortIndicators(); // Update sort indicators when opening folder
@@ -2179,12 +2179,14 @@ const LinkManager = {
       console.log('renderLinks called with:', links);
       console.log('State.currentFolder:', State.currentFolder);
       
-      // Always get fresh data from storage if we have a current folder
-      if (State.currentFolder) {
-        const folders = await Storage.getFolders();
-        const freshLinks = folders[State.currentFolder] || [];
-        console.log('Rendering fresh links for folder:', State.currentFolder, freshLinks);
-        links = freshLinks;
+      // Only get fresh data from storage if no links are provided
+      if (!links || links.length === 0) {
+        if (State.currentFolder) {
+          const folders = await Storage.getFolders();
+          const freshLinks = folders[State.currentFolder] || [];
+          console.log('No links provided, getting fresh links for folder:', State.currentFolder, freshLinks);
+          links = freshLinks;
+        }
       }
       
       // Ensure links is an array
@@ -2534,7 +2536,8 @@ const LinkManager = {
       await Storage.setFolders(folders);
       
       // Force fresh render from storage to ensure UI consistency
-      await this.renderLinks([]);
+      const freshLinks = folders[State.currentFolder];
+      await this.renderLinks(freshLinks);
       
       const isStarred = folders[State.currentFolder][linkIndex].starred;
       console.log('Star toggled for link:', linkId, 'New starred status:', isStarred);
@@ -2554,14 +2557,15 @@ const LinkManager = {
       folders[State.currentFolder].splice(index, 1);
       await Storage.setFolders(folders);
       
-      State.update({ currentLinks: folders[State.currentFolder] });
+      const freshLinks = folders[State.currentFolder];
+      State.update({ currentLinks: freshLinks });
       
       // Hide export and copy links if no links left
-      if (!State.currentLinks || State.currentLinks.length === 0) {
+      if (!freshLinks || freshLinks.length === 0) {
         DOM.exportCsvBtn.style.display = 'none';
       }
       
-      await this.renderLinks(State.currentLinks);
+      await this.renderLinks(freshLinks);
       
       // Update folder count
       await updateFolderCountDirect(State.currentFolder);
@@ -2576,11 +2580,14 @@ const LinkManager = {
     const searchTerm = Utils.sanitizeInput(DOM.searchInput.value.toLowerCase().trim());
     
     if (!searchTerm) {
-      await this.renderLinks(State.currentLinks);
+      // Get fresh links from storage to ensure consistency
+      const folders = await Storage.getFolders();
+      const freshLinks = folders[State.currentFolder] || [];
+      await this.renderLinks(freshLinks);
       return;
     }
     
-    const filteredLinks = State.currentLinks.filter(link => {
+    const filteredLinks = freshLinks.filter(link => {
       const name = (link.name || link.url || '').toLowerCase();
       const url = link.url.toLowerCase();
       return name.includes(searchTerm) || url.includes(searchTerm);
@@ -2590,7 +2597,15 @@ const LinkManager = {
   },
 
   async exportCsv() {
-    if (!State.currentFolder || !State.currentLinks || State.currentLinks.length === 0) {
+    if (!State.currentFolder) {
+      Utils.showMessage('Kein Ordner ausgewählt.', 'error');
+      return;
+    }
+    
+    const folders = await Storage.getFolders();
+    const freshLinks = folders[State.currentFolder] || [];
+    
+    if (!freshLinks || freshLinks.length === 0) {
       Utils.showMessage('Keine Links zum Exportieren vorhanden.', 'error');
       return;
     }
@@ -2600,7 +2615,7 @@ const LinkManager = {
       const csvHeader = 'Name,URL,Hinzugefügt am\n';
       
       // CSV Rows
-      const csvRows = State.currentLinks.map(link => {
+      const csvRows = freshLinks.map(link => {
         const name = (link.name || link.url || '').replace(/"/g, '""'); // Escape quotes
         const url = link.url.replace(/"/g, '""'); // Escape quotes
         const date = link.addedAt ? new Date(link.addedAt).toLocaleDateString('de-DE') : 'Unbekannt';
@@ -2624,7 +2639,7 @@ const LinkManager = {
       link.click();
       document.body.removeChild(link);
       
-      Utils.showMessage(`CSV Export erfolgreich: ${State.currentLinks.length} Links exportiert`);
+      Utils.showMessage(`CSV Export erfolgreich: ${freshLinks.length} Links exportiert`);
     } catch (error) {
       console.error('CSV Export error:', error);
       Utils.showMessage('Fehler beim CSV Export: ' + error.message, 'error');
@@ -2639,20 +2654,20 @@ const LinkManager = {
       }
       
       const folders = await Storage.getFolders();
-      const links = folders[State.currentFolder] || [];
+      const freshLinks = folders[State.currentFolder] || [];
       
-      if (links.length === 0) {
+      if (freshLinks.length === 0) {
         Utils.showMessage('Keine Links zum Kopieren vorhanden.', 'error');
         return;
       }
       
       // Create clipboard content
-      const clipboardContent = this.createClipboardContent(State.currentFolder, links);
+      const clipboardContent = this.createClipboardContent(State.currentFolder, freshLinks);
       
       // Copy to clipboard
       await navigator.clipboard.writeText(clipboardContent);
       
-      Utils.showMessage(`${links.length} Links aus "${State.currentFolder}" in Zwischenablage kopiert.`);
+      Utils.showMessage(`${freshLinks.length} Links aus "${State.currentFolder}" in Zwischenablage kopiert.`);
     } catch (error) {
       console.error('Error copying to clipboard:', error);
       Utils.showMessage('Fehler beim Kopieren: ' + error.message, 'error');
@@ -2692,13 +2707,21 @@ const LinkManager = {
   },
 
   async openAllLinks() {
-    if (!State.currentFolder || !State.currentLinks || State.currentLinks.length === 0) {
+    if (!State.currentFolder) {
+      Utils.showMessage('Kein Ordner ausgewählt.', 'error');
+      return;
+    }
+    
+    const folders = await Storage.getFolders();
+    const freshLinks = folders[State.currentFolder] || [];
+    
+    if (!freshLinks || freshLinks.length === 0) {
       Utils.showMessage('Keine Links zum Öffnen vorhanden.', 'error');
       return;
     }
     
     try {
-      const validLinks = State.currentLinks.filter(link => {
+      const validLinks = freshLinks.filter(link => {
         return Utils.isValidUrl(link.url);
       });
       
@@ -2982,9 +3005,9 @@ const LinkManager = {
        const [movedLink] = links.splice(fromIndex, 1);
        links.splice(toIndex, 0, movedLink);
        
-       await Storage.setFolders(folders);
-       State.update({ currentLinks: links });
-       await this.renderLinks(State.currentLinks);
+             await Storage.setFolders(folders);
+      State.update({ currentLinks: links });
+      await this.renderLinks(links);
        Utils.showMessage('Link erfolgreich verschoben');
      } catch (error) {
        Utils.showMessage('Fehler beim Verschieben: ' + error.message, 'error');
@@ -3086,8 +3109,10 @@ const SortManager = {
      // Update sort indicators
      this.updateSortIndicators();
      
-     // Sort and render
-     const sortedLinks = this.sortLinks(State.currentLinks, State.currentSort.field, State.currentSort.direction);
+     // Get fresh links from storage and sort them
+     const folders = await Storage.getFolders();
+     const freshLinks = folders[State.currentFolder] || [];
+     const sortedLinks = this.sortLinks(freshLinks, State.currentSort.field, State.currentSort.direction);
      await LinkManager.renderLinks(sortedLinks);
    }
  };
@@ -3160,9 +3185,10 @@ const TabManager = {
       folders[State.currentFolder].push(newLink);
       await Storage.setFolders(folders);
       
-      State.update({ currentLinks: folders[State.currentFolder] });
+      const updatedLinks = folders[State.currentFolder];
+      State.update({ currentLinks: updatedLinks });
       
-      if (State.currentLinks && State.currentLinks.length > 0) {
+      if (updatedLinks && updatedLinks.length > 0) {
         if (DOM.exportCsvBtn) {
           DOM.exportCsvBtn.style.display = 'inline-block';
         }
@@ -3171,7 +3197,7 @@ const TabManager = {
       
       // Update UI with error handling
       try {
-        await LinkManager.renderLinks(State.currentLinks);
+        await LinkManager.renderLinks(updatedLinks);
         await updateFolderCountDirect(State.currentFolder);
         // Don't call checkAndShowOnboarding here as it resets the view
         Utils.showMessage('Tab erfolgreich hinzugefügt.');
