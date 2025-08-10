@@ -170,25 +170,25 @@ body.full-page .quick-save-row {
 }
 
 .sidebar-full-page-btn {
-  color: var(--text-primary);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  padding: 8px 12px;
-  border-radius: var(--border-radius-sm);
+  color: var(--text-primary) !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  padding: 8px 12px !important;
+  border-radius: var(--border-radius-sm) !important;
   transition: all 0.2s ease;
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   outline: none;
-  font-size: 12px;
+  font-size: 12px !important;
   font-weight: 500;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-full-page-btn:hover {
-  color: var(--text-primary);
-  background-color: var(--surface-hover);
+  color: var(--text-primary) !important;
+  background-color: var(--surface-hover) !important;
 }
 
 .sidebar-full-page-btn:active {
@@ -196,10 +196,10 @@ body.full-page .quick-save-row {
 }
 
 .sidebar-full-page-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 16px !important;
+  height: 16px !important;
   flex-shrink: 0;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
 }
 
 .sidebar-full-page-btn span {
