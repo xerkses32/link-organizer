@@ -1497,8 +1497,8 @@ async loadFolders() {
     cancelBtn.className = "folder-edit-btn folder-edit-btn-cancel";
     
     // Replace content
-    folderNameSpan.style.display = 'none';
-    li.querySelector('.folder-actions').style.display = 'none';
+      folderNameSpan.classList.add('is-invisible');
+      li.querySelector('.folder-actions').classList.add('is-invisible');
     
     const editContainer = document.createElement("div");
     editContainer.className = "folder-edit-container";
@@ -3088,18 +3088,25 @@ const LinkManager = {
 
 // ===== ICON MANAGEMENT =====
 const IconManager = {
+  _cache: new Map(),
+
   async loadSvgIcon(filename) {
     try {
+      if (this._cache.has(filename)) {
+        return this._cache.get(filename).cloneNode(true);
+      }
+
       const response = await fetch(chrome.runtime.getURL(filename));
       const svgText = await response.text();
-      
+
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = svgText;
-      
+
       const svg = tempDiv.querySelector('svg');
       if (svg) {
-  svg.classList.add("icon-svg");
-  return svg;
+        svg.classList.add("icon-svg");
+        this._cache.set(filename, svg.cloneNode(true));
+        return svg;
       }
     } catch (error) {
       console.error('Error loading SVG:', error);
@@ -3406,14 +3413,14 @@ const OnboardingManager = {
     for (let i = 1; i <= 3; i++) {
       const step = document.getElementById(`step${i}`);
       if (step) {
-        step.style.display = 'none';
+        step.classList.add('is-hidden');
       }
     }
     
     // Show current step
     const currentStep = document.getElementById(`step${stepNumber}`);
     if (currentStep) {
-      currentStep.style.display = 'flex';
+      currentStep.classList.remove('is-hidden');
     }
   }
 };

@@ -666,6 +666,12 @@ button:disabled {
   display: flex !important;
 }
 
+/* Keeps layout but hides content for visual consistency */
+.is-invisible {
+  visibility: hidden !important;
+  pointer-events: none;
+}
+
 .full-page-link {
   color: var(--text-secondary);
   text-decoration: none;
