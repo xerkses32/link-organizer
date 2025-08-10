@@ -166,7 +166,7 @@ body.full-page .quick-save-row {
   min-width: 280px; /* Mindestbreite für Sidebar */
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 16px 12px 36px; /* Platz für Overlay-Wrapper (kleiner) */
+  padding: 16px 12px 0; /* Kein Bottom-Padding - Glass-Box übernimmt */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -183,11 +183,10 @@ body.full-page .quick-save-row {
   margin-right: -12px;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Logo links positionieren */
-  padding-left: 20px; /* Logo von links einrücken */
-  height: 36px; /* kleinere Höhe */
-  margin-top: -36px; /* überlagert den Scroll-Content (Glass sichtbar) */
-  /* Minimaler Glass-Effekt - nur bei scrollendem Content sichtbar */
+  justify-content: center; /* Logo mittig positionieren */
+  height: 60px; /* größere Höhe für 4x größeres Logo */
+  margin-top: auto; /* an das untere Ende drücken, ohne Überlagerung */
+  /* Glass-Effekt über gesamte Box */
   background: transparent;
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
@@ -197,9 +196,9 @@ body.full-page .quick-save-row {
 }
 
 .sidebar-logo-img {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 112px; /* 4x größer: 28px * 4 = 112px */
+  height: 112px;
+  border-radius: 16px; /* proportional größer */
   object-fit: contain; /* Transparenz des PNG erhalten */
 }
 
