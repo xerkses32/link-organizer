@@ -1590,7 +1590,8 @@ const FolderManager = {
         DOM.selectedFolderTitle.textContent = 'Links';
         DOM.saveLinkBtn.disabled = true;
         DOM.exportCsvBtn.classList.add('is-disabled');
-        DOM.searchInput.style.display = 'none';
+        DOM.searchInput.disabled = true;
+        DOM.searchInput.classList.add('is-disabled');
         await LinkManager.renderLinks([]);
       }
       
@@ -2169,8 +2170,10 @@ const FolderManager = {
              return;
            }
            
-           // Open the folder
-           await this.openFolder(folderName);
+           // Open the folder with fresh links from storage
+           const folders = await Storage.getFolders();
+           const folderLinks = folders[folderName] || [];
+           await this.openFolder(folderName, folderLinks);
            DOM.shareCodeInput.value = '';
            Utils.showMessage(`Ordner "${folderName}" erfolgreich geöffnet.`);
            return;
