@@ -184,13 +184,13 @@ body.full-page .quick-save-row {
   display: flex;
   align-items: center;
   justify-content: center; /* Logo mittig platzieren */
-  padding: 16px 12px;
-  border-radius: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
   /* Glass-Effekt */
-  background: rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
-  box-shadow: inset 0 0 0 1px rgba(229, 231, 235, 0.55), 0 6px 14px rgba(0,0,0,0.06);
+  background: rgba(255, 255, 255, 0.04); /* fast unsichtbar */
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  box-shadow: inset 0 0 0 1px rgba(229, 231, 235, 0.25);
   margin-top: auto; /* an das untere Ende drücken */
   overflow: hidden; /* Logo darf nicht herausragen */
   z-index: 2;
@@ -200,11 +200,7 @@ body.full-page .quick-save-row {
   width: 64px;
   height: 64px;
   border-radius: 10px;
-  object-fit: cover;
-  transform: scale(2.6); /* sattes Reinzoomen */
-  transform-origin: center;
-  mix-blend-mode: multiply; /* Weißanteile verschmelzen */
-  filter: brightness(1.05) contrast(1.1) saturate(1.1);
+  object-fit: contain; /* Transparenz des PNG erhalten */
 }
 
 .folder-input-container {
