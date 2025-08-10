@@ -166,7 +166,7 @@ body.full-page .quick-save-row {
   min-width: 280px; /* Mindestbreite für Sidebar */
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 16px 12px 60px; /* Bottom-Padding für Glass-Box Overlay */
+  padding: 16px 12px 0; /* Kein Bottom-Padding - Logo-Wrapper füllt komplett aus */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -184,8 +184,8 @@ body.full-page .quick-save-row {
   display: flex;
   align-items: center;
   justify-content: center; /* Logo mittig positionieren */
-  height: 60px; /* größere Höhe für Logo */
-  margin-top: -60px; /* überlagert den Scroll-Content (Glass wieder sichtbar) */
+  height: 60px; /* feste Höhe für Logo */
+  margin-top: auto; /* drückt sich an das Ende, füllt verfügbaren Raum */
   /* Glass-Effekt über gesamte Box */
   background: rgba(255, 255, 255, 0.02); /* minimaler Hintergrund für Glass */
   backdrop-filter: blur(12px) saturate(140%);
