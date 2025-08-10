@@ -74,11 +74,14 @@ body:not(.full-page) .main-content {
 
 body:not(.full-page) #quickSaveInterface {
   position: relative; /* Nicht sticky in Popup */
-  top: auto;
-  background: transparent;
+  top: 0; /* Feste Position für stabiles Layout */
+  background: white; /* Konsistenter Hintergrund */
   z-index: auto;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
+  margin: 0; /* Keine variablen Margins */
+  min-height: 80px; /* Feste Mindesthöhe für Konsistenz */
+  box-sizing: border-box;
 }
 
 /* Full-Page Modus Anpassungen */
@@ -1551,6 +1554,8 @@ button:disabled {
   z-index: 9;
   padding: 12px 0;
   border-bottom: 1px solid var(--border-color);
+  min-height: 80px; /* Konsistente Mindesthöhe */
+  box-sizing: border-box;
 }
 
 .quick-save-row {
