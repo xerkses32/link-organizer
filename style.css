@@ -166,7 +166,7 @@ body.full-page .quick-save-row {
   min-width: 280px; /* Mindestbreite für Sidebar */
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 16px 12px 0; /* kein Boden-Polster, damit kein weißer Streifen unter dem Wrapper bleibt */
+  padding: 16px 12px 72px; /* Platz für Overlay-Wrapper einplanen */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -184,12 +184,18 @@ body.full-page .quick-save-row {
   display: flex;
   align-items: center;
   justify-content: center; /* Logo mittig platzieren */
-  padding: 10px 12px;
-  border-radius: 10px;
+  height: 72px; /* feste Höhe für Überlagerung */
+  padding: 0 12px;
+  margin-top: -72px; /* überlagert den Scroll-Content (Glass sichtbar) */
+  border-radius: 12px 12px 0 0;
   /* Glass-Effekt */
-  background: rgba(255, 255, 255, 0.04); /* fast unsichtbar */
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.10),
+    rgba(255, 255, 255, 0.06)
+  ); /* subtiler, aber erkennbar */
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
   box-shadow: inset 0 0 0 1px rgba(229, 231, 235, 0.25);
   margin-top: auto; /* an das untere Ende drücken */
   overflow: hidden; /* Logo darf nicht herausragen */
