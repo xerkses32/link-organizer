@@ -3386,7 +3386,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // Sidebar Full-Page Button Event Handler
+    console.log('Setting up sidebar full-page button:', DOM.sidebarFullPageBtn);
     DOM.sidebarFullPageBtn.addEventListener('click', () => {
+      console.log('Sidebar full-page button clicked!');
       chrome.tabs.create({ 
         url: chrome.runtime.getURL('popup.html?fullpage=true') 
       });

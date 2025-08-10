@@ -170,19 +170,20 @@ body.full-page .quick-save-row {
 }
 
 .sidebar-full-page-btn {
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  padding: 6px 8px;
+  color: var(--text-primary);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
   border-radius: var(--border-radius-sm);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
   outline: none;
   font-size: 12px;
   font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-full-page-btn:hover {
@@ -195,9 +196,10 @@ body.full-page .quick-save-row {
 }
 
 .sidebar-full-page-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+  color: var(--text-primary);
 }
 
 .sidebar-full-page-btn span {
