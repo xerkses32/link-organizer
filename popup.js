@@ -1839,9 +1839,10 @@ async loadFolders() {
         const shareCodeDisplaySection = document.getElementById('shareCodeDisplaySection');
         const copyDisplayedCodeBtn = document.getElementById('copyDisplayedCodeBtn');
         
-        if (displayedShareCode && shareCodeDisplaySection) {
-          displayedShareCode.value = shareCode;
-          shareCodeDisplaySection.style.display = 'block';
+              if (displayedShareCode && shareCodeDisplaySection) {
+        displayedShareCode.value = shareCode;
+        shareCodeDisplaySection.classList.remove('is-hidden');
+        shareCodeDisplaySection.classList.add('is-visible');
           
           // Update copy functionality
           if (copyDisplayedCodeBtn) {
@@ -1869,10 +1870,11 @@ async loadFolders() {
             removeShareBtn.onclick = async () => {
               try {
                 await FolderManager.removeShare(folderName, shareCode);
-                // Hide the share code display
-                if (shareCodeDisplaySection) {
-                  shareCodeDisplaySection.style.display = 'none';
-                }
+                            // Hide the share code display  
+            if (shareCodeDisplaySection) {
+              shareCodeDisplaySection.classList.remove('is-visible');
+              shareCodeDisplaySection.classList.add('is-hidden');
+            }
                 // Reload folders to update share indicators
                 await FolderManager.loadFolders();
                 Utils.showMessage('Teilen erfolgreich beendet.');
@@ -3318,19 +3320,23 @@ const OnboardingManager = {
     const emptyState = document.getElementById('emptyState');
     
     if (onboardingFlow) {
-      onboardingFlow.style.display = 'block';
+      onboardingFlow.classList.remove('is-hidden');
+      onboardingFlow.classList.add('is-visible');
     }
     if (linksTable) {
-      linksTable.style.display = 'none';
+      linksTable.classList.remove('is-visible');
+      linksTable.classList.add('is-hidden');
     }
     if (emptyState) {
-      emptyState.style.display = 'none';
+      emptyState.classList.remove('is-visible');
+      emptyState.classList.add('is-hidden');
     }
     
     // Hide other UI elements during onboarding
     const quickSaveInfo = document.querySelector('.quick-save-info');
     if (quickSaveInfo) {
-      quickSaveInfo.style.display = 'none';
+      quickSaveInfo.classList.remove('is-visible');
+      quickSaveInfo.classList.add('is-hidden');
     }
   },
 
@@ -3339,16 +3345,19 @@ const OnboardingManager = {
     const linksTable = document.querySelector('.links-table');
     
     if (onboardingFlow) {
-      onboardingFlow.style.display = 'none';
+      onboardingFlow.classList.remove('is-visible');
+      onboardingFlow.classList.add('is-hidden');
     }
     if (linksTable) {
-      linksTable.style.display = 'block';
+      linksTable.classList.remove('is-hidden');
+      linksTable.classList.add('is-visible');
     }
     
     // Show other UI elements
     const quickSaveInfo = document.querySelector('.quick-save-info');
     if (quickSaveInfo) {
-      quickSaveInfo.style.display = 'block';
+      quickSaveInfo.classList.remove('is-hidden');
+      quickSaveInfo.classList.add('is-visible');
     }
   },
 
