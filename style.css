@@ -189,6 +189,8 @@ body.full-page .quick-save-row {
 .sidebar-full-page-btn:hover {
   color: var(--text-primary) !important;
   background-color: var(--surface-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
 }
 
 .sidebar-full-page-btn:active {
@@ -484,6 +486,7 @@ button:disabled {
   flex-direction: column;
   gap: 16px;
   background: var(--surface);
+  position: relative;
 }
 
 .header-row {
@@ -1489,12 +1492,19 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: sticky;
+  top: 60px;
+  background: white;
+  z-index: 9;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .quick-save-row {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-bottom: 8px;
 }
 
 /* Tab info styles removed - no longer needed */
