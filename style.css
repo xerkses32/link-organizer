@@ -1547,14 +1547,14 @@ button:disabled {
 #quickSaveInterface {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* row + tip Abstand */
+  gap: 12px; /* row Abstand */
   position: sticky;
   top: 60px;
   background: white;
   z-index: 9;
   padding: 12px 0;
   border-bottom: 1px solid var(--border-color);
-  min-height: 88px; /* 36 + 8 + 28 + padding */
+  min-height: 48px; /* nur die Row + padding */
   box-sizing: border-box;
 }
 
@@ -1609,13 +1609,7 @@ button:disabled {
 }
 
 /* Quick Save Info */
-.quick-save-info {
-  background: rgba(16, 163, 127, 0.05);
-  border: 1px solid rgba(16, 163, 127, 0.2);
-  border-radius: var(--border-radius-sm);
-  padding: 4px 12px;
-  height: 28px; /* Fixe Höhe für stabilen Platz */
-}
+/* quick-save-info entfernt */
 
 /* Sichtbarkeit ohne Layout zu verändern */
 .is-invisible {
