@@ -166,7 +166,7 @@ body.full-page .quick-save-row {
   min-width: 280px; /* Mindestbreite für Sidebar */
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 16px 12px 72px; /* Platz für Overlay-Wrapper einplanen */
+  padding: 16px 12px 36px; /* Platz für Overlay-Wrapper (kleiner) */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -184,15 +184,15 @@ body.full-page .quick-save-row {
   display: flex;
   align-items: center;
   justify-content: center; /* Logo mittig platzieren */
-  height: 72px; /* feste Höhe für Überlagerung */
-  padding: 0 12px;
-  margin-top: -72px; /* überlagert den Scroll-Content (Glass sichtbar) */
-  border-radius: 12px 12px 0 0;
+  height: 36px; /* kleinere Höhe */
+  padding: 0 10px;
+  margin-top: -36px; /* überlagert den Scroll-Content (Glass sichtbar) */
+  border-radius: 10px 10px 0 0;
   /* Glass-Effekt */
   background: linear-gradient(
     to top,
     rgba(255, 255, 255, 0.10),
-    rgba(255, 255, 255, 0.06)
+    rgba(255, 255, 255, 0.05)
   ); /* subtiler, aber erkennbar */
   backdrop-filter: blur(14px) saturate(170%);
   -webkit-backdrop-filter: blur(14px) saturate(170%);
@@ -204,9 +204,9 @@ body.full-page .quick-save-row {
 }
 
 .sidebar-logo-img {
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   object-fit: contain; /* Transparenz des PNG erhalten */
 }
 
