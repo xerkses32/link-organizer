@@ -1878,68 +1878,7 @@ async loadFolders() {
      DOM.selectedFolderTitle.textContent = Utils.sanitizeInput(name);
      DOM.saveLinkBtn.disabled = !State.currentTab;
      
-     // Check if folder is shared and show share code display
-     // Share Code removed
-     const shareCodeDisplaySection = document.getElementById('shareCodeDisplaySection');
-     const displayedShareCode = document.getElementById('displayedShareCode');
-     const copyDisplayedCodeBtn = document.getElementById('copyDisplayedCodeBtn');
-     
-     if (shares[name] && shares[name].length > 0) {
-       // Show share code display and populate with first share code
-       if (shareCodeDisplaySection) {
-         shareCodeDisplaySection.classList.remove('is-hidden');
-         shareCodeDisplaySection.classList.add('is-visible');
-       }
-       if (displayedShareCode) {
-         displayedShareCode.value = shares[name][0].code;
-       }
-       
-       // Add copy functionality
-       if (copyDisplayedCodeBtn) {
-         copyDisplayedCodeBtn.onclick = async () => {
-           try {
-             await navigator.clipboard.writeText(shares[name][0].code);
-             Utils.showMessage('Share-Code in Zwischenablage kopiert.');
-           } catch (error) {
-             Utils.showMessage('Fehler beim Kopieren: ' + error.message, 'error');
-           }
-         };
-       }
-       
-       // Add remove share functionality
-       const removeShareBtn = document.getElementById('removeShareBtn');
-       if (removeShareBtn) {
-         // Load trash SVG icon
-         const trashIcon = await IconManager.loadSvgIcon('trash.svg');
-         if (trashIcon) {
-           trashIcon.classList.add('delete-icon');
-           IconManager.removeInlineStyles(trashIcon);
-           removeShareBtn.appendChild(trashIcon);
-         }
-         
-         removeShareBtn.onclick = async () => {
-           try {
-                       await this.removeShare(name, shares[name][0].code);
-          // Hide the share code display
-          if (shareCodeDisplaySection) {
-            shareCodeDisplaySection.classList.remove('is-visible');
-            shareCodeDisplaySection.classList.add('is-hidden');
-          }
-          // Update only share indicators, not full reload
-          await this.updateFolderShareIndicators();
-             Utils.showMessage('Teilen erfolgreich beendet.');
-           } catch (error) {
-             Utils.showMessage('Fehler beim Beenden des Teilens: ' + error.message, 'error');
-           }
-         };
-       }
-     } else {
-       // Hide share code display if folder is not shared
-       if (shareCodeDisplaySection) {
-         shareCodeDisplaySection.classList.remove('is-visible');
-         shareCodeDisplaySection.classList.add('is-hidden');
-       }
-     }
+      // Share UI entfernt
      
      // Keep header layout stable: do not hide controls, just disable
      const hasLinks = Array.isArray(freshLinks) && freshLinks.length > 0;
