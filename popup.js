@@ -1188,20 +1188,7 @@ async loadFolders() {
     countElement.textContent = `(${links ? links.length : 0})`;
     folderName.appendChild(countElement);
     
-    // Check if folder is shared and add share indicator
-    const shares = await this.getSharedFolders();
-    if (shares[name] && shares[name].length > 0) {
-      const shareIndicator = document.createElement("span");
-      shareIndicator.className = "folder-share-indicator";
-      shareIndicator.title = `${shares[name].length} Share(s)`;
-      shareIndicator.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-          <path d="M15 3C15 2.44772 15.4477 2 16 2C19.3137 2 22 4.68629 22 8V16C22 19.3137 19.3137 22 16 22H8C4.68629 22 2 19.3137 2 16C2 15.4477 2.44772 15 3 15C3.55228 15 4 15.4477 4 16C4 18.2091 5.79086 20 8 20H16C18.2091 20 20 18.2091 20 16V8C20 5.79086 18.2091 4 16 4C15.4477 4 15 3.55228 15 3Z" fill="currentColor"/>
-          <path d="M3.70663 12.7845L3.16104 12.2746L3.70664 12.7845C4.09784 12.3659 4.62287 11.8265 5.17057 11.3274C5.72852 10.8191 6.26942 10.3905 6.69641 10.1599C7.06268 9.96208 7.75042 9.84035 8.40045 9.84848C8.62464 9.85128 8.81365 9.86944 8.9559 9.89472C8.96038 10.5499 8.95447 11.7469 8.95145 12.2627C8.94709 13.0099 9.83876 13.398 10.3829 12.8878L14.9391 8.61636C15.2845 8.2926 15.2988 7.74908 14.971 7.4076L10.4132 2.65991C9.88293 2.10757 8.95 2.48291 8.95 3.24856V5.16793C8.5431 5.13738 8.0261 5.11437 7.47937 5.13009C6.5313 5.15734 5.30943 5.30257 4.4722 5.88397C4.36796 5.95636 4.26827 6.03539 4.17359 6.11781C2.49277 7.58092 2.11567 9.90795 1.8924 11.7685L1.87242 11.935C1.74795 12.9722 3.02541 13.5134 3.70663 12.7845ZM9.35701 11.7935L9.70204 12.1615L9.35701 11.7935C9.35715 11.7934 9.35729 11.7932 9.35744 11.7931L9.35701 11.7935Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      `;
-      folderName.appendChild(shareIndicator);
-    }
+    // Share indicator removed
     
     // Actions container
     const actionsContainer = this.createFolderActions(name, li, editIcon, deleteIcon);
@@ -1419,23 +1406,10 @@ async loadFolders() {
     
     IconManager.removeInlineStyles(copyIcon);
     
-    // Share icon
-    const shareIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    shareIcon.setAttribute("viewBox", "0 0 24 24");
-    shareIcon.classList.add('folder-action-icon', 'share-folder');
-    shareIcon.innerHTML = '<path d="M15 3C15 2.44772 15.4477 2 16 2C19.3137 2 22 4.68629 22 8V16C22 19.3137 19.3137 22 16 22H8C4.68629 22 2 19.3137 2 16C2 15.4477 2.44772 15 3 15C3.55228 15 4 15.4477 4 16C4 18.2091 5.79086 20 8 20H16C18.2091 20 20 18.2091 20 16V8C20 5.79086 18.2091 4 16 4C15.4477 4 15 3.55228 15 3Z" fill="currentColor"/><path d="M3.70663 12.7845L3.16104 12.2746L3.70664 12.7845C4.09784 12.3659 4.62287 11.8265 5.17057 11.3274C5.72852 10.8191 6.26942 10.3905 6.69641 10.1599C7.06268 9.96208 7.75042 9.84035 8.40045 9.84848C8.62464 9.85128 8.81365 9.86944 8.9559 9.89472C8.96038 10.5499 8.95447 11.7469 8.95145 12.2627C8.94709 13.0099 9.83876 13.398 10.3829 12.8878L14.9391 8.61636C15.2845 8.2926 15.2988 7.74908 14.971 7.4076L10.4132 2.65991C9.88293 2.10757 8.95 2.48291 8.95 3.24856V5.16793C8.5431 5.13738 8.0261 5.11437 7.47937 5.13009C6.5313 5.15734 5.30943 5.30257 4.4722 5.88397C4.36796 5.95636 4.26827 6.03539 4.17359 6.11781C2.49277 7.58092 2.11567 9.90795 1.8924 11.7685L1.87242 11.935C1.74795 12.9722 3.02541 13.5134 3.70663 12.7845ZM9.35701 11.7935L9.70204 12.1615L9.35701 11.7935C9.35715 11.7934 9.35729 11.7932 9.35744 11.7931L9.35701 11.7935Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
-    shareIcon.title = "Ordner freigeben";
-    shareIcon.addEventListener("click", (e) => {
-      console.log('Share icon clicked for folder:', name);
-      e.stopPropagation();
-      this.showShareDialog(name);
-    });
-    
-    IconManager.removeInlineStyles(shareIcon);
+    // Share icon removed
     
     actionsContainer.appendChild(editIconClone);
     actionsContainer.appendChild(copyIcon);
-    actionsContainer.appendChild(shareIcon);
     actionsContainer.appendChild(deleteIconClone);
     
     return actionsContainer;
@@ -1606,207 +1580,7 @@ async loadFolders() {
      }
    },
 
-   async showShareDialog(folderName) {
-     try {
-       console.log('showShareDialog called for folder:', folderName);
-       const folders = await Storage.getFolders();
-       const links = folders[folderName] || [];
-       
-       if (links.length === 0) {
-         Utils.showMessage('Keine Links in diesem Ordner zum Freigeben.', 'error');
-         return;
-       }
-       
-       // Get link count
-       const linkCount = links.length.toString();
-       
-       // Create share dialog
-       const dialog = this.createShareDialog(folderName, linkCount);
-       document.body.appendChild(dialog);
-       console.log('Dialog added to DOM');
-       
-
-       
-     } catch (error) {
-       Utils.showMessage('Fehler beim Öffnen des Share-Dialogs: ' + error.message, 'error');
-     }
-   },
-
-   createShareDialog(folderName, linkCount = '0') {
-     console.log('Creating share dialog for folder:', folderName);
-     const dialog = document.createElement('div');
-     dialog.className = 'share-dialog-overlay';
-     dialog.innerHTML = `
-       <div class="share-dialog">
-         <div class="share-dialog-header">
-           <div class="share-icon">
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-               <path d="M15 3C15 2.44772 15.4477 2 16 2C19.3137 2 22 4.68629 22 8V16C22 19.3137 19.3137 22 16 22H8C4.68629 22 2 19.3137 2 16C2 15.4477 2.44772 15 3 15C3.55228 15 4 15.4477 4 16C4 18.2091 5.79086 20 8 20H16C18.2091 20 20 18.2091 20 16V8C20 5.79086 18.2091 4 16 4C15.4477 4 15 3.55228 15 3Z" fill="currentColor"/>
-               <path d="M3.70663 12.7845L3.16104 12.2746L3.70664 12.7845C4.09784 12.3659 4.62287 11.8265 5.17057 11.3274C5.72852 10.8191 6.26942 10.3905 6.69641 10.1599C7.06268 9.96208 7.75042 9.84035 8.40045 9.84848C8.62464 9.85128 8.81365 9.86944 8.9559 9.89472C8.96038 10.5499 8.95447 11.7469 8.95145 12.2627C8.94709 13.0099 9.83876 13.398 10.3829 12.8878L14.9391 8.61636C15.2845 8.2926 15.2988 7.74908 14.971 7.4076L10.4132 2.65991C9.88293 2.10757 8.95 2.48291 8.95 3.24856V5.16793C8.5431 5.13738 8.0261 5.11437 7.47937 5.13009C6.5313 5.15734 5.30943 5.30257 4.4722 5.88397C4.36796 5.95636 4.26827 6.03539 4.17359 6.11781C2.49277 7.58092 2.11567 9.90795 1.8924 11.7685L1.87242 11.935C1.74795 12.9722 3.02541 13.5134 3.70663 12.7845ZM9.35701 11.7935L9.70204 12.1615L9.35701 11.7935C9.35715 11.7934 9.35729 11.7932 9.35744 11.7931L9.35701 11.7935Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-             </svg>
-           </div>
-           <h3>Share-Code generieren</h3>
-           <button class="close-btn" id="closeShareBtn">
-             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-             </svg>
-           </button>
-         </div>
-         <div class="share-dialog-content">
-           <div class="share-folder-info">
-             <span class="folder-name">${folderName}</span>
-             <span class="folder-count">${linkCount} Links</span>
-             <p class="share-info-text">Ein kurzer Code wird generiert, den Sie per Email oder Chat teilen können.</p>
-           </div>
-           
-           <div class="share-code-display" id="shareCodeDisplay" style="display: none;">
-             <div class="code-field">
-               <input type="text" id="generatedCode" readonly placeholder="Code wird generiert..." />
-               <button class="copy-code-btn" id="copyCodeBtn" title="Code kopieren">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                   <path fill-rule="evenodd" clip-rule="evenodd" d="M19.5 16.5L19.5 4.5L18.75 3.75H9L8.25 4.5L8.25 7.5L5.25 7.5L4.5 8.25V20.25L5.25 21H15L15.75 20.25V17.25H18.75L19.5 16.5ZM15.75 15.75L15.75 8.25L15 7.5L9.75 7.5V5.25L18 5.25V15.75H15.75ZM6 9L14.25 9L14.25 19.5L6 19.5L6 9Z" fill="currentColor"/>
-                 </svg>
-               </button>
-             </div>
-           </div>
-
-           <div class="share-permissions">
-             <div class="permission-tabs">
-               <button class="permission-tab active" data-permission="view">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
-                   <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                 </svg>
-                 Nur anzeigen
-               </button>
-               <button class="permission-tab" data-permission="edit">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2"/>
-                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2"/>
-                 </svg>
-                 Bearbeiten
-               </button>
-             </div>
-           </div>
-           <div class="share-actions">
-             <button class="share-btn" id="generateShareBtn" data-folder-name="${folderName}">
-               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="currentColor" stroke-width="2"/>
-                 <polyline points="16,6 12,2 8,6" stroke="currentColor" stroke-width="2"/>
-                 <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="2"/>
-               </svg>
-               Code generieren
-             </button>
-           </div>
-         </div>
-       </div>
-     `;
-     
-     // Add event listeners for permission tabs
-     setTimeout(() => {
-       const tabs = dialog.querySelectorAll('.permission-tab');
-       tabs.forEach(tab => {
-         tab.addEventListener('click', () => {
-           tabs.forEach(t => t.classList.remove('active'));
-           tab.classList.add('active');
-  });
-});
-
-       // Add event listeners for buttons
-       const closeBtn = dialog.querySelector('#closeShareBtn');
-       const generateBtn = dialog.querySelector('#generateShareBtn');
-       
-       if (closeBtn) {
-         closeBtn.addEventListener('click', () => {
-           console.log('Close button clicked');
-           dialog.remove();
-         });
-       }
-       
-       if (generateBtn) {
-         generateBtn.addEventListener('click', async () => {
-           console.log('Generate button clicked');
-           const folderName = generateBtn.dataset.folderName;
-           try {
-             const shareCode = await FolderManager.generateShareCodeAndDisplay(folderName, dialog);
-             // Don't close dialog automatically, let user copy the code
-           } catch (error) {
-             console.error('Error generating share code:', error);
-           }
-         });
-       }
-       
-       // Add copy button event listener
-       const copyBtn = dialog.querySelector('#copyCodeBtn');
-       if (copyBtn) {
-         copyBtn.addEventListener('click', async () => {
-           const codeInput = dialog.querySelector('#generatedCode');
-           if (codeInput && codeInput.value) {
-             try {
-               await navigator.clipboard.writeText(codeInput.value);
-               Utils.showMessage('Code in Zwischenablage kopiert!');
-             } catch (error) {
-               console.error('Error copying code:', error);
-               Utils.showMessage('Fehler beim Kopieren: ' + error.message, 'error');
-             }
-           }
-         });
-       }
-     }, 0);
-     
-     console.log('Share dialog created successfully');
-     return dialog;
-   },
-
-  async getFolderLinkCount(folderName) {
-     try {
-       const folders = await Storage.getFolders();
-       const links = folders[folderName] || [];
-       return links.length.toString();
-     } catch (error) {
-       return '0';
-     }
-   },
-
-       async generateShareCode(folderName) {
-      try {
-        const activeTab = document.querySelector('.permission-tab.active');
-        
-        if (!activeTab) {
-          Utils.showMessage('Bitte eine Berechtigung auswählen.', 'error');
-          return;
-        }
-        
-        const permission = activeTab.dataset.permission;
-        
-        // Generate share code
-        const shareCode = this.generateShareCodeString(folderName, permission);
-        console.log('Share code generated:', shareCode);
-        
-        // Store share data
-        await this.storeShareData(folderName, permission, shareCode);
-        
-        // Copy code to clipboard
-        await navigator.clipboard.writeText(shareCode);
-        
-        Utils.showMessage(`✅ Share-Code generiert: ${shareCode}`);
-        
-        return shareCode;
-      } catch (error) {
-        Utils.showMessage('Fehler beim Generieren: ' + error.message, 'error');
-        throw error;
-      }
-    },
-
-    async generateShareCodeAndDisplay() { return; },
-
-   generateShareCodeString() { return ''; },
-
-   async storeShareData() { return; },
-
-   async getSharedFolders() { return {}; },
-
-   async removeShare() { return; },
+     // Share functionality completely removed
 
    async copyFolderToClipboard(folderName) {
      try {
@@ -1942,78 +1716,9 @@ async loadFolders() {
      return li;
    },
 
-   async enterShareCode() {
-     try {
-       const code = DOM.shareCodeInput.value.trim().toUpperCase();
-       
-       if (!code) {
-         Utils.showMessage('Bitte einen Share-Code eingeben.', 'error');
-         return;
-       }
-       
-       if (!code.startsWith('LINK-')) {
-         Utils.showMessage('Ungültiger Share-Code Format. Erwartet: LINK-XXXXXX', 'error');
-         return;
-       }
-       
-       const shares = await this.getSharedFolders();
-       
-       // Search for the code in all shares
-       for (const [folderName, shareList] of Object.entries(shares)) {
-         const share = shareList.find(s => s.code === code);
-         if (share) {
-           // Check if share is expired
-           const expiresAt = new Date(share.expiresAt);
-           if (expiresAt < new Date()) {
-             Utils.showMessage('Share-Code ist abgelaufen.', 'error');
-             return;
-           }
-           
-           // Open the folder with fresh links from storage
-           const folders = await Storage.getFolders();
-           const folderLinks = folders[folderName] || [];
-           await this.openFolder(folderName, folderLinks);
-           DOM.shareCodeInput.value = '';
-           Utils.showMessage(`Ordner "${folderName}" erfolgreich geöffnet.`);
-           return;
-         }
-       }
-       
-       Utils.showMessage('Ungültiger Share-Code.', 'error');
-       
-     } catch (error) {
-       Utils.showMessage('Fehler beim Öffnen des Share-Codes: ' + error.message, 'error');
-     }
-   },
+     // Share functions completely removed
 
-  // Efficient update functions to avoid full reload
-   async updateFolderShareIndicators() {
-    try {
-      const shares = {}; // removed
-      const folderItems = document.querySelectorAll('#folderList li[data-folder-name]');
-      
-      folderItems.forEach(item => {
-        const folderName = item.dataset.folderName;
-        const shareIndicator = item.querySelector('.folder-share-indicator');
-        
-        if (shares[folderName] && shares[folderName].length > 0) {
-          if (!shareIndicator) {
-            // Add share indicator
-            const newIndicator = document.createElement('span');
-            newIndicator.className = 'folder-share-indicator';
-            newIndicator.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3C15 2.44772 15.4477 2 16 2C19.3137 2 22 4.68629 22 8V16C22 19.3137 19.3137 22 16 22H8C4.68629 22 2 19.3137 2 16C2 15.4477 2.44772 15 3 15C3.55228 15 4 15.4477 4 16C4 18.2091 5.79086 20 8 20H16C18.2091 20 20 18.2091 20 16V8C20 5.79086 18.2091 4 16 4C15.4477 4 15 3.55228 15 3Z"/></svg>`;
-            item.querySelector('.folder-name').appendChild(newIndicator);
-          }
-        } else {
-          if (shareIndicator) {
-            shareIndicator.remove();
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error updating share indicators:', error);
-    }
-  }
+ // Share functions completely removed
 };
 
 // ===== LINK MANAGEMENT =====
