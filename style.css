@@ -138,6 +138,10 @@ body.full-page .links-table {
   height: calc(100vh - 120px); /* Abzüglich Header und Quick-Save */
 }
 
+body.full-page #linkList {
+  max-height: none; /* Keine Höhenbegrenzung in Full-Screen */
+}
+
 body.full-page .sidebar {
   height: 100vh;
   overflow-y: auto;
@@ -852,7 +856,7 @@ button:disabled {
   margin: 0;
   overflow-y: auto; /* Scroll aktivieren */
   flex: 1; /* Nimmt verfügbaren Platz ein */
-  max-height: 300px; /* Höhe begrenzen */
+  max-height: 300px; /* Höhe begrenzen für Popup */
   min-height: 100px; /* Minimale Höhe */
 }
 
