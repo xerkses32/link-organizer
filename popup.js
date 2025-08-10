@@ -2345,6 +2345,10 @@ const LinkManager = {
         return null;
       }
       
+      // Attach stable identifiers for robust diffs
+      li.dataset.linkId = linkObj.id;
+      li.setAttribute('draggable', 'true');
+
       // Name column with thumbnail
       const nameContainer = this.createNameContainer(linkObj);
       
@@ -2385,10 +2389,10 @@ const LinkManager = {
       thumbnail.style.display = 'none';
     }
     
-    thumbnail.alt = "";
-    thumbnail.onerror = () => {
-      thumbnail.style.display = 'none';
-    };
+      thumbnail.alt = "";
+      thumbnail.addEventListener('error', () => {
+        thumbnail.style.display = 'none';
+      });
     
     const a = document.createElement("a");
     a.href = linkObj.url;
@@ -2904,7 +2908,7 @@ const LinkManager = {
      }
   },
 
-     async saveMissingLinkIds(links) {
+    async saveMissingLinkIds(links) {
      try {
        const folders = await Storage.getFolders();
        let hasChanges = false;
@@ -2926,10 +2930,11 @@ const LinkManager = {
            }
          }
          
-         if (hasChanges) {
-           await Storage.setFolders(folders);
-           console.log('Saved missing link IDs and starred properties to storage');
-         }
+          if (hasChanges) {
+            await Storage.setFolders(folders);
+            State.update({ currentLinks: folders[State.currentFolder] });
+            console.log('Saved missing link IDs/starred and synced state');
+          }
        }
      } catch (error) {
        console.error('Error saving missing link IDs:', error);
