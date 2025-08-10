@@ -80,8 +80,9 @@ body:not(.full-page) #quickSaveInterface {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   margin: 0; /* Keine variablen Margins */
-  min-height: 80px; /* Feste Mindesthöhe für Konsistenz */
+  height: 120px; /* Feste Höhe statt min-height - genug für Button + Tipp */
   box-sizing: border-box;
+  overflow: hidden; /* Verhindert Layout-Breaking */
 }
 
 /* Full-Page Modus Anpassungen */
@@ -1554,8 +1555,9 @@ button:disabled {
   z-index: 9;
   padding: 12px 0;
   border-bottom: 1px solid var(--border-color);
-  min-height: 80px; /* Konsistente Mindesthöhe */
+  height: 120px; /* Feste Höhe auch für Full-Page */
   box-sizing: border-box;
+  overflow: hidden; /* Verhindert Content-Overflow */
 }
 
 .quick-save-row {
