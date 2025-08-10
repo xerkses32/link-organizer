@@ -166,7 +166,7 @@ body.full-page .quick-save-row {
   min-width: 280px; /* Mindestbreite für Sidebar */
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 16px 12px;
+  padding: 16px 12px 0; /* kein Boden-Polster, damit kein weißer Streifen unter dem Wrapper bleibt */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -194,6 +194,7 @@ body.full-page .quick-save-row {
   margin-top: auto; /* an das untere Ende drücken */
   overflow: hidden; /* Logo darf nicht herausragen */
   z-index: 2;
+  pointer-events: none; /* Wrapper nicht interaktiv wahrnehmen */
 }
 
 .sidebar-logo-img {
