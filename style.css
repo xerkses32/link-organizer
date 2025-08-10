@@ -185,8 +185,7 @@ body.full-page .quick-save-row {
   align-items: center;
   justify-content: center; /* Logo mittig positionieren */
   height: 60px; /* feste Höhe für Logo */
-  margin-top: -60px; /* überlagert scrollbaren Content für Glass-Effekt */
-  margin-bottom: -60px; /* kompensiert die Höhe, füllt bis zum Ende */
+  margin-top: auto; /* drückt sich an das Ende der Flexbox */
   /* Glass-Effekt über scrollbarem Content */
   background: rgba(255, 255, 255, 0.02); /* minimaler Hintergrund für Glass */
   backdrop-filter: blur(12px) saturate(140%);
