@@ -203,6 +203,8 @@ body.full-page .quick-save-row {
   height: 224px;
   border-radius: 20px; /* proportional größer */
   object-fit: contain; /* Transparenz des PNG erhalten */
+  transform: scale(3); /* 3x Zoom */
+  transform-origin: center; /* zentriert zoomen */
 }
 
 .folder-input-container {
