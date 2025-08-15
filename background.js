@@ -75,6 +75,14 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
+// Sichere Eingabe-Validierung für Background
+const Utils = {
+  sanitizeInput(input) {
+    if (!input || typeof input !== 'string') return '';
+    return input.replace(/[<>&"']/g, '').trim();
+  }
+};
+
 // URL-Validierung
 function isValidUrl(string) {
   try {
@@ -89,9 +97,9 @@ function isValidUrl(string) {
 function showNotification(message, type = 'info') {
   chrome.notifications.create({
     type: 'basic',
-    iconUrl: 'icon.png',
+    iconUrl: 'logo-48.png',
     title: 'Link Organizer',
-    message: message
+    message: Utils.sanitizeInput(message) // Nachrichten sanitisieren
   });
 }
 

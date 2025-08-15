@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" id="html-root">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,20 +11,20 @@
             <!-- Sidebar - Fixed -->
     <div class="sidebar">
           <div class="sidebar-header">
-      <h2>Ordner</h2>
-            <button id="sidebarFullPageBtn" class="sidebar-full-page-btn" title="In neuem Tab öffnen">
+      <h2 data-i18n="folders">Ordner</h2>
+            <button id="sidebarFullPageBtn" class="sidebar-full-page-btn" title="In neuem Tab öffnen" data-i18n-title="openInNewTab">
               <svg width="14" height="14" viewBox="0 0 36 36" fill="currentColor">
                 <path d="M27,33H5a2,2,0,0,1-2-2V9A2,2,0,0,1,5,7H15V9H5V31H27V21h2V31A2,2,0,0,1,27,33Z"></path>
                 <path d="M18,3a1,1,0,0,0,0,2H29.59L15.74,18.85a1,1,0,1,0,1.41,1.41L31,6.41V18a1,1,0,0,0,2,0V3Z"></path>
               </svg>
-              <span>In neuem Tab öffnen</span>
+              <span data-i18n="openInNewTab">In neuem Tab öffnen</span>
             </button>
           </div>
       <div class="folder-input-container">
-        <input type="text" id="newFolderName" placeholder="Neuer Ordner...">
+        <input type="text" id="newFolderName" placeholder="Neuer Ordner..." data-i18n-placeholder="newFolderPlaceholder">
       </div>
       <div class="folder-create-container">
-      <button id="createFolderBtn">Erstellen</button>
+      <button id="createFolderBtn" data-i18n="createButton">Erstellen</button>
       </div>
       <ul id="folderList"></ul>
 
@@ -42,10 +42,29 @@
       <div class="header-row">
         <h1 id="selectedFolderTitle">Link Organizer</h1>
                     <div class="header-actions">
-              <a href="#" id="openAllLinksBtn" class="open-all-link">Alle öffnen</a>
-              <a href="#" id="historyToggleBtn" class="history-link">Browserverlauf</a>
-              <a href="#" id="exportCsvBtn" class="export-link">Export CSV</a>
-              <a href="#" id="fullPageBtn" class="full-page-link" title="In neuem Tab öffnen">
+              <!-- Language Selector -->
+              <div class="language-selector">
+                <button id="languageToggle" class="language-dropdown-btn" title="Select Language" data-i18n-title="selectLanguage">
+                  <img src="usflag.svg" alt="EN" class="flag-icon" id="currentFlag">
+                  <svg class="dropdown-arrow" width="8" height="5" viewBox="0 0 8 5" fill="currentColor">
+                    <path d="M1 1l3 3 3-3"/>
+                  </svg>
+                </button>
+                <div id="languageDropdown" class="language-dropdown is-hidden">
+                  <div class="language-option" data-lang="en">
+                    <img src="usflag.svg" alt="EN" class="flag-icon">
+                    <span>English</span>
+                  </div>
+                  <div class="language-option" data-lang="de">
+                    <img src="gyflag.svg" alt="DE" class="flag-icon">
+                    <span>Deutsch</span>
+                  </div>
+                </div>
+              </div>
+              
+              <a href="#" id="openAllLinksBtn" class="open-all-link" data-i18n="openAll">Alle öffnen</a>
+              <a href="#" id="exportCsvBtn" class="export-link" data-i18n="exportCsv">Export CSV</a>
+              <a href="#" id="fullPageBtn" class="full-page-link" title="In neuem Tab öffnen" data-i18n-title="openInNewTab" data-i18n="fullscreen">
                 <svg width="14" height="14" viewBox="0 0 36 36" fill="currentColor">
                   <path d="M27,33H5a2,2,0,0,1-2-2V9A2,2,0,0,1,5,7H15V9H5V31H27V21h2V31A2,2,0,0,1,27,33Z"></path>
                   <path d="M18,3a1,1,0,0,0,0,2H29.59L15.74,18.85a1,1,0,1,0,1.41,1.41L31,6.41V18a1,1,0,0,0,2,0V3Z"></path>
@@ -58,8 +77,8 @@
       <!-- Quick Save Interface -->
       <div id="quickSaveInterface">
         <div class="quick-save-row">
-          <button id="saveLinkBtn">+ Tab hinzufügen</button>
-          <input type="text" id="searchInput" placeholder="Links durchsuchen..." class="search-input">
+          <button id="saveLinkBtn" data-i18n="addTab">+ Tab hinzufügen</button>
+          <input type="text" id="searchInput" placeholder="Links durchsuchen..." class="search-input" data-i18n-placeholder="searchPlaceholder">
         </div>
       </div>
 
@@ -67,25 +86,34 @@
       <div class="links-table">
         <div class="table-header">
           <div class="col-name sortable" data-sort="name">
-            Name
+            <span data-i18n="name">Name</span>
             <span class="sort-icon">↕</span>
           </div>
           <div class="col-date sortable" data-sort="date">
-            Hinzugefügt am
+            <span data-i18n="addedOn">Hinzugefügt am</span>
             <span class="sort-icon">↕</span>
           </div>
-          <div class="col-actions">Aktionen</div>
+          <div class="col-actions"><span data-i18n="actions">Aktionen</span></div>
         </div>
         <div id="linkList"></div>
       </div>
 
       <!-- Empty State -->
-      <div id="emptyState" class="empty-state is-hidden">
+      <div id="emptyState" class="empty-state is-hidden" data-i18n="emptyState">
         Keine Links in diesem Ordner. Füge deinen ersten Link hinzu!
       </div>
 
       <!-- Messages Container -->
       <div id="messagesContainer"></div>
+      
+      <!-- Quick Action Button -->
+      <button id="quickHistoryBtn" class="quick-action-btn" title="Browserverlauf öffnen" data-i18n-title="openHistory">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12,6 12,12 16,14"/>
+        </svg>
+        <span data-i18n="openHistory">Browserverlauf öffnen</span>
+      </button>
     </div>
 
     <!-- History Overlay - Right Side -->
@@ -95,7 +123,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <h3>Browserverlauf</h3>
+          <h3 data-i18n="browserHistory">Browserverlauf</h3>
         </div>
         <button id="closeHistoryBtn" class="close-history-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -107,17 +135,9 @@
       <!-- History Controls -->
       <div class="history-controls">
         <div class="history-search">
-          <input type="text" id="historySearchInput" placeholder="Verlauf durchsuchen..." class="history-search-input">
+          <input type="text" id="historySearchInput" placeholder="Verlauf durchsuchen..." class="history-search-input" data-i18n-placeholder="searchHistory">
         </div>
-        <div class="history-filters">
-          <select id="historyTimeFilter" class="history-filter-select">
-            <option value="1">Letzte Stunde</option>
-            <option value="24">Letzte 24 Stunden</option>
-            <option value="168" selected>Letzte Woche</option>
-            <option value="720">Letzter Monat</option>
-            <option value="all">Alle Zeit</option>
-          </select>
-        </div>
+
       </div>
 
       <!-- History List -->
@@ -125,10 +145,10 @@
         <div class="history-list-header">
           <div class="history-select-all">
             <input type="checkbox" id="selectAllHistory" class="history-checkbox">
-            <label for="selectAllHistory">Alle auswählen</label>
+            <label for="selectAllHistory" data-i18n="selectAll">Alle auswählen</label>
           </div>
           <div class="history-selected-count">
-            <span id="selectedHistoryCount">0</span> ausgewählt
+            <span id="selectedHistoryCount">0</span> <span data-i18n="selected">ausgewählt</span>
           </div>
         </div>
         <div id="historyList" class="history-list">

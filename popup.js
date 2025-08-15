@@ -1,3 +1,13 @@
+/*
+ * Link Organizer - Chrome Extension
+ * Copyright (c) 2024 Markus Fackler. All rights reserved.
+ * 
+ * This software is proprietary and confidential. Unauthorized copying,
+ * distribution, modification, or use is strictly prohibited.
+ * 
+ * Licensed under proprietary license - see LICENSE file for details.
+ */
+
 // ===== CONFIGURATION =====
 const CONFIG = {
   MESSAGE_TIMEOUT: 3000,
@@ -22,16 +32,484 @@ const   DOM = {
     // Share Code removed
     // History Overlay Elements
     historyOverlay: document.getElementById("historyOverlay"),
-    historyToggleBtn: document.getElementById("historyToggleBtn"),
+  quickHistoryBtn: document.getElementById("quickHistoryBtn"),
     closeHistoryBtn: document.getElementById("closeHistoryBtn"),
     historySearchInput: document.getElementById("historySearchInput"),
-    historyTimeFilter: document.getElementById("historyTimeFilter"),
+
+
     selectAllHistory: document.getElementById("selectAllHistory"),
     selectedHistoryCount: document.getElementById("selectedHistoryCount"),
     historyList: document.getElementById("historyList"),
     addSelectedToFolderBtn: document.getElementById("addSelectedToFolderBtn"),
     fullPageBtn: document.getElementById("fullPageBtn"),
-    sidebarFullPageBtn: document.getElementById("sidebarFullPageBtn")
+    sidebarFullPageBtn: document.getElementById("sidebarFullPageBtn"),
+    // Language Elements
+    languageToggle: document.getElementById("languageToggle"),
+    languageDropdown: document.getElementById("languageDropdown"),
+    currentFlag: document.getElementById("currentFlag")
+  };
+
+// ===== INTERNATIONALIZATION =====
+const I18N = {
+  currentLanguage: 'en', // English als Standard
+  
+  // Translation data
+  translations: {
+    de: {
+      // Sidebar
+      folders: 'Ordner',
+      newFolderPlaceholder: 'Neuer Ordner...',
+      createButton: 'Erstellen',
+      openInNewTab: 'In neuem Tab öffnen',
+      
+      // Main content
+      addTab: '+ Tab hinzufügen',
+      searchPlaceholder: 'Links durchsuchen...',
+      name: 'Name',
+      addedOn: 'Hinzugefügt am',
+      actions: 'Aktionen',
+      openAll: 'Alle öffnen',
+      exportCsv: 'Export CSV',
+      fullscreen: 'Vollbild',
+      emptyState: 'Keine Links in diesem Ordner. Füge deinen ersten Link hinzu!',
+      
+      // History
+      openHistory: 'Browserverlauf öffnen',
+      browserHistory: 'Browserverlauf',
+      searchHistory: 'Verlauf durchsuchen...',
+      selectAll: 'Alle auswählen',
+      selected: 'ausgewählt',
+      
+      // Messages
+      folderCreated: 'Ordner erstellt',
+      linkAdded: 'Link hinzugefügt',
+      linkDeleted: 'Link gelöscht',
+      folderDeleted: 'Ordner gelöscht',
+      
+      // Date labels
+      today: 'Heute',
+      
+      // History specific
+      noActivities: 'Keine Aktivitäten',
+      noActivityBlocks: 'Keine Aktivitätsblöcke gefunden.',
+      noHistory: 'Kein Verlauf',
+      noHistoryEntries: 'Keine Browserverlauf-Einträge gefunden.',
+      errorLoading: 'Fehler beim Laden',
+      historyLoadError: 'Fehler beim Laden der Historie',
+      ensureHistoryPermission: 'Stelle sicher, dass die "history" Permission aktiviert ist.',
+      retryButton: 'Extension neu laden',
+      pages: 'Seiten',
+      page: 'Seite',
+      
+      // Language selector
+      selectLanguage: 'Sprache wählen',
+      
+      // Error messages
+      folderNameRequired: 'Bitte geben Sie einen Ordnernamen ein.',
+      folderNameTooLong: 'Ordnername zu lang (max. 50 Zeichen).',
+      folderExists: 'Ordner existiert bereits.',
+      linkNameTooLong: 'Name zu lang (max. 100 Zeichen).',
+      linkAlreadyExists: 'Link bereits vorhanden.',
+      noFolderSelected: 'Bitte zuerst einen Ordner auswählen.',
+      noLinksToExport: 'Keine Links zum Exportieren vorhanden.',
+      noLinksToOpen: 'Keine Links zum Öffnen vorhanden.',
+      noValidLinks: 'Keine gültigen Links zum Öffnen gefunden.',
+      invalidUrl: 'Ungültige URL vom aktuellen Tab.',
+      linkNotFound: 'Link konnte nicht gefunden werden.',
+      linkAlreadyInFolder: 'Link ist bereits in diesem Ordner.',
+      linkAlreadyInTargetFolder: 'Link ist bereits im Zielordner vorhanden.',
+      selectFolderFirst: 'Bitte wähle zuerst einen Ordner aus.',
+      noLinksInFolder: 'Keine Links in diesem Ordner zum Kopieren.',
+      currentTabError: 'Aktueller Tab konnte nicht geladen werden.',
+      tooManyTabs: 'Zu viele Tabs in kurzer Zeit. Bitte warten Sie einen Moment.',
+      
+      // Success messages
+      folderRenamed: 'Ordner erfolgreich umbenannt.',
+      linkRenamed: 'Link erfolgreich umbenannt.',
+      linkMoved: 'Link erfolgreich verschoben',
+      linkMovedTo: 'Link erfolgreich nach "{folder}" verschoben.',
+      linkStarred: 'Link als Favorit markiert',
+      linkUnstarred: 'Favorit entfernt',
+      folderReordered: 'Ordner "{name}" wurde neu angeordnet.',
+      linksCopied: '{count} Links aus "{folder}" in Zwischenablage kopiert.',
+      csvExported: 'CSV Export erfolgreich: {count} Links exportiert',
+      linksAdded: '{count} Link{s} zum Ordner "{folder}" hinzugefügt.',
+      linksOpened: '{count} Links in neuen Tabs geöffnet.',
+      linksAddedSkipped: '{added} Links hinzugefügt, {skipped} übersprungen (bereits vorhanden).',
+      welcomeMessage: 'Willkommen bei Link Organizer! 🎉',
+      
+      // UI updates and cleanup
+      oldDataCleaned: 'Alte Daten wurden automatisch bereinigt.',
+      storageWarning: 'Speicher wird knapp: {size}MB von 7MB verwendet.',
+      linkSavedUIFailed: 'Link gespeichert, aber UI-Update fehlgeschlagen.',
+      maxTabsLimit: 'Nur {max} Tabs pro Minute erlaubt.'
+    },
+    
+    en: {
+      // Sidebar
+      folders: 'Folders',
+      newFolderPlaceholder: 'New folder...',
+      createButton: 'Create',
+      openInNewTab: 'Open in new tab',
+      
+      // Main content
+      addTab: '+ Add tab',
+      searchPlaceholder: 'Search links...',
+      name: 'Name',
+      addedOn: 'Added on',
+      actions: 'Actions',
+      openAll: 'Open all',
+      exportCsv: 'Export CSV',
+      fullscreen: 'Fullscreen',
+      emptyState: 'No links in this folder. Add your first link!',
+      
+      // History
+      openHistory: 'Open browser history',
+      browserHistory: 'Browser History',
+      searchHistory: 'Search history...',
+      selectAll: 'Select all',
+      selected: 'selected',
+      
+      // Messages
+      folderCreated: 'Folder created',
+      linkAdded: 'Link added',
+      linkDeleted: 'Link deleted',
+      folderDeleted: 'Folder deleted',
+      
+      // Date labels
+      today: 'Today',
+      
+      // History specific
+      noActivities: 'No Activities',
+      noActivityBlocks: 'No activity blocks found.',
+      noHistory: 'No History',
+      noHistoryEntries: 'No browser history entries found.',
+      errorLoading: 'Error loading',
+      historyLoadError: 'Error loading history',
+      ensureHistoryPermission: 'Make sure the "history" permission is enabled.',
+      retryButton: 'Reload extension',
+      pages: 'pages',
+      page: 'page',
+      
+      // Language selector
+      selectLanguage: 'Select Language',
+      
+      // Error messages
+      folderNameRequired: 'Please enter a folder name.',
+      folderNameTooLong: 'Folder name too long (max. 50 characters).',
+      folderExists: 'Folder already exists.',
+      linkNameTooLong: 'Name too long (max. 100 characters).',
+      linkAlreadyExists: 'Link already exists.',
+      noFolderSelected: 'Please select a folder first.',
+      noLinksToExport: 'No links to export.',
+      noLinksToOpen: 'No links to open.',
+      noValidLinks: 'No valid links found to open.',
+      invalidUrl: 'Invalid URL from current tab.',
+      linkNotFound: 'Link could not be found.',
+      linkAlreadyInFolder: 'Link is already in this folder.',
+      linkAlreadyInTargetFolder: 'Link is already in target folder.',
+      selectFolderFirst: 'Please select a folder first.',
+      noLinksInFolder: 'No links in this folder to copy.',
+      currentTabError: 'Current tab could not be loaded.',
+      tooManyTabs: 'Too many tabs in short time. Please wait a moment.',
+      
+      // Success messages
+      folderRenamed: 'Folder successfully renamed.',
+      linkRenamed: 'Link successfully renamed.',
+      linkMoved: 'Link successfully moved',
+      linkMovedTo: 'Link successfully moved to "{folder}".',
+      linkStarred: 'Link marked as favorite',
+      linkUnstarred: 'Favorite removed',
+      folderReordered: 'Folder "{name}" was reordered.',
+      linksCopied: '{count} links from "{folder}" copied to clipboard.',
+      csvExported: 'CSV export successful: {count} links exported',
+      linksAdded: '{count} link{s} added to folder "{folder}".',
+      linksOpened: '{count} links opened in new tabs.',
+      linksAddedSkipped: '{added} links added, {skipped} skipped (already exist).',
+      welcomeMessage: 'Welcome to Link Organizer! 🎉',
+      
+      // UI updates and cleanup
+      oldDataCleaned: 'Old data was automatically cleaned up.',
+      storageWarning: 'Storage is running low: {size}MB of 7MB used.',
+      linkSavedUIFailed: 'Link saved, but UI update failed.',
+      maxTabsLimit: 'Only {max} tabs per minute allowed.'
+    }
+  },
+  
+  // Language data with flags
+  languages: {
+    de: {
+      name: 'Deutsch',
+      flag: 'gyflag.svg',
+      code: 'DE'
+    },
+    en: {
+      name: 'English',
+      flag: 'usflag.svg',
+      code: 'EN'
+    }
+  },
+  
+  // Get translation with variable substitution
+  t(key, variables = {}) {
+    let translation = this.translations[this.currentLanguage][key] || key;
+    
+    // Replace variables in format {variableName}
+    Object.keys(variables).forEach(varKey => {
+      const regex = new RegExp(`\\{${varKey}\\}`, 'g');
+      translation = translation.replace(regex, variables[varKey]);
+    });
+    
+    return translation;
+  },
+  
+  // Load saved language
+  async loadLanguage() {
+    try {
+      const result = await Storage.get('language');
+      if (result && this.translations[result]) {
+        this.currentLanguage = result;
+      }
+      
+      // Ensure all dropdown options are visible on load
+      Utils.setSafeTimeout(() => {
+        this.updateDropdownActiveStates();
+      }, 100);
+    } catch (error) {
+      console.error('Error loading language:', error);
+    }
+  },
+  
+  // Save language
+  async saveLanguage(lang) {
+    try {
+      await Storage.set({ language: lang });
+      this.currentLanguage = lang;
+    } catch (error) {
+      console.error('Error saving language:', error);
+    }
+  },
+  
+  // Switch language
+  async switchLanguage(newLang) {
+    if (newLang && newLang !== this.currentLanguage) {
+      await this.saveLanguage(newLang);
+      this.updateUI();
+    }
+  },
+  
+  // Toggle dropdown
+  toggleDropdown() {
+    if (!DOM.languageDropdown) return;
+    
+    const isOpen = !DOM.languageDropdown.classList.contains('is-hidden');
+    
+    if (isOpen) {
+      this.closeDropdown();
+    } else {
+      this.openDropdown();
+    }
+  },
+  
+  // Open dropdown
+  openDropdown() {
+    if (!DOM.languageDropdown || !DOM.languageToggle) return;
+    
+    DOM.languageDropdown.classList.remove('is-hidden');
+    DOM.languageToggle.setAttribute('aria-expanded', 'true');
+    
+    // Update active states
+    this.updateDropdownActiveStates();
+    
+    // Close on outside click
+    Utils.setSafeTimeout(() => {
+      document.addEventListener('click', this.handleOutsideClick.bind(this));
+    }, 100);
+  },
+  
+  // Close dropdown
+  closeDropdown() {
+    if (!DOM.languageDropdown || !DOM.languageToggle) return;
+    
+    DOM.languageDropdown.classList.add('is-hidden');
+    DOM.languageToggle.setAttribute('aria-expanded', 'false');
+    
+    document.removeEventListener('click', this.handleOutsideClick.bind(this));
+  },
+  
+  // Handle outside click
+  handleOutsideClick(event) {
+    if (!DOM.languageDropdown) return;
+    
+    const isClickInsideDropdown = DOM.languageDropdown.contains(event.target);
+    const isClickOnToggle = DOM.languageToggle && DOM.languageToggle.contains(event.target);
+    
+    if (!isClickInsideDropdown && !isClickOnToggle) {
+      this.closeDropdown();
+    }
+  },
+  
+  // Update dropdown active states
+  updateDropdownActiveStates() {
+    if (!DOM.languageDropdown) return;
+    
+    const options = DOM.languageDropdown.querySelectorAll('.language-option');
+    options.forEach(option => {
+      const lang = option.getAttribute('data-lang');
+      // Ensure all options are always visible
+      option.style.display = 'flex';
+      option.style.visibility = 'visible';
+      
+      if (lang === this.currentLanguage) {
+        option.classList.add('active');
+      } else {
+        option.classList.remove('active');
+      }
+    });
+  },
+  
+  // Update language button
+  updateLanguageButton() {
+    if (!DOM.currentFlag) return;
+    
+    const langData = this.languages[this.currentLanguage];
+    DOM.currentFlag.src = langData.flag;
+    DOM.currentFlag.alt = langData.code;
+  },
+  
+  // Update all UI text
+  updateUI() {
+    // Update elements with data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+      const key = element.getAttribute('data-i18n');
+      const translation = this.t(key);
+      element.textContent = translation;
+    });
+    
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+      const key = element.getAttribute('data-i18n-placeholder');
+      const translation = this.t(key);
+      element.placeholder = translation;
+    });
+    
+    // Update titles
+    document.querySelectorAll('[data-i18n-title]').forEach(element => {
+      const key = element.getAttribute('data-i18n-title');
+      const translation = this.t(key);
+      element.title = translation;
+    });
+    
+    // Update language button
+    this.updateLanguageButton();
+    
+      // Update document language
+    document.documentElement.lang = this.currentLanguage;
+  },
+  
+  // Format date according to current language
+  formatDate(date, options = {}) {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    
+    if (this.currentLanguage === 'en') {
+      // English format: MM/DD/YYYY or January 1, 2024
+      if (options.short) {
+        return dateObj.toLocaleDateString('en-US', { 
+          month: '2-digit', 
+          day: '2-digit', 
+          year: 'numeric' 
+        });
+      } else {
+        return dateObj.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      }
+    } else {
+      // German format: DD.MM.YYYY or 1. Januar 2024
+      if (options.short) {
+        const day = dateObj.getDate().toString().padStart(2, '0');
+        const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+        const year = dateObj.getFullYear();
+        return `${day}.${month}.${year}`;
+      } else {
+        return dateObj.toLocaleDateString('de-DE', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      }
+    }
+  },
+  
+  // Format time according to current language
+  formatTime(date, options = {}) {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    
+    if (this.currentLanguage === 'en') {
+      // English format: 2:30 PM
+      return dateObj.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } else {
+      // German format: 14:30
+      return dateObj.toLocaleTimeString('de-DE', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+    }
+  },
+  
+  // Format datetime according to current language
+  formatDateTime(date, options = {}) {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    
+    if (this.currentLanguage === 'en') {
+      // English format: Jan 1, 2024 at 2:30 PM
+      if (options.short) {
+        return dateObj.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric',
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        });
+      } else {
+        return dateObj.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        });
+      }
+    } else {
+      // German format: 1. Jan 2024 um 14:30
+      if (options.short) {
+        return dateObj.toLocaleDateString('de-DE', { 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      } else {
+        return dateObj.toLocaleDateString('de-DE', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      }
+    }
+  }
   };
 
 // ===== STATE MANAGEMENT =====
@@ -41,6 +519,7 @@ const State = {
   currentTab: null,
   currentSort: { ...CONFIG.DEFAULT_SORT },
   draggedElement: null,
+  activeTimeouts: new Set(), // Track active timeouts
   
   update(updates) {
     Object.assign(this, updates);
@@ -61,10 +540,13 @@ const State = {
 
 // ===== UTILITY FUNCTIONS =====
 const Utils = {
-  showMessage(message, type = 'success') {
+  showMessage(message, type = 'success', variables = {}) {
+    // Try to translate message if it's a translation key
+    const translatedMessage = I18N.t(message, variables);
+    
     const messageEl = document.createElement('div');
     messageEl.className = type === 'error' ? 'error-message' : 'success-message';
-    messageEl.textContent = message;
+    messageEl.textContent = translatedMessage;
     
     // Clear messages container safely
     while (DOM.messagesContainer.firstChild) {
@@ -72,7 +554,7 @@ const Utils = {
     }
     DOM.messagesContainer.appendChild(messageEl);
     
-    setTimeout(() => {
+    Utils.setSafeTimeout(() => {
       if (messageEl.parentNode) {
         messageEl.remove();
       }
@@ -107,16 +589,46 @@ const Utils = {
     if (!input || typeof input !== 'string') return '';
     
     return input
-      .replace(/[<>]/g, '') // Basis HTML-Tags entfernen
+      .replace(/[<>&"']/g, (char) => {
+        // HTML Entity Encoding
+        const entities = {
+          '<': '&lt;',
+          '>': '&gt;',
+          '&': '&amp;',
+          '"': '&quot;',
+          "'": '&#x27;'
+        };
+        return entities[char] || char;
+      })
       .replace(/javascript:/gi, '') // JavaScript-URLs blockieren
-      .replace(/on\w+=/gi, '') // Event-Handler entfernen
       .replace(/data:/gi, '') // Data-URLs blockieren
       .replace(/vbscript:/gi, '') // VBScript blockieren
+      .replace(/file:/gi, '') // File-URLs blockieren
+      .replace(/on\w+\s*=/gi, '') // Event-Handler entfernen
+      .replace(/expression\s*\(/gi, '') // CSS Expression attacks
+      .replace(/url\s*\(/gi, '') // CSS URL injections
       .trim();
   },
 
+  // Neue sichere Funktion für URLs
+  sanitizeUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    
+    try {
+      const urlObj = new URL(url);
+      // Nur sichere Protokolle erlauben
+      const allowedProtocols = ['http:', 'https:', 'ftp:', 'mailto:'];
+      if (!allowedProtocols.includes(urlObj.protocol)) {
+        return '';
+      }
+      return urlObj.href;
+    } catch {
+      return '';
+    }
+  },
+
   generateId() {
-    return `link-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `link-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   },
 
   clearElement(element) {
@@ -126,6 +638,11 @@ const Utils = {
     }
     
     try {
+      // Only clear event listeners for dynamic content areas, not core UI
+      if (element.id === 'linkList' || element.id === 'historyList' || element.id === 'folderList') {
+        this.removeAllEventListeners(element);
+      }
+      
       while (element.firstChild) {
         element.removeChild(element.firstChild);
       }
@@ -134,22 +651,80 @@ const Utils = {
     }
   },
 
+  // Remove all event listeners from element and its children (selective)
+  removeAllEventListeners(element) {
+    if (!element) return;
+    
+    try {
+      // Only remove listeners from specific dynamic elements, not core UI
+      const dynamicSelectors = [
+        '.link-item',
+        '.folder-item', 
+        '.activity-entry',
+        '.activity-header',
+        '.entry-checkbox',
+        '.drag-handle'
+      ];
+      
+      dynamicSelectors.forEach(selector => {
+        const elements = element.querySelectorAll(selector);
+        elements.forEach(el => {
+          if (el.parentNode) {
+            const newEl = el.cloneNode(true);
+            el.parentNode.replaceChild(newEl, el);
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Error removing event listeners:', error);
+    }
+  },
+
+  // Safe timeout management to prevent race conditions
+  setSafeTimeout(callback, delay) {
+    const timeoutId = setTimeout(() => {
+      State.activeTimeouts.delete(timeoutId);
+      callback();
+    }, delay);
+    State.activeTimeouts.add(timeoutId);
+    return timeoutId;
+  },
+
+  clearSafeTimeout(timeoutId) {
+    if (timeoutId && State.activeTimeouts.has(timeoutId)) {
+      clearTimeout(timeoutId);
+      State.activeTimeouts.delete(timeoutId);
+    }
+  },
+
+  clearAllTimeouts() {
+    State.activeTimeouts.forEach(timeoutId => {
+      clearTimeout(timeoutId);
+    });
+    State.activeTimeouts.clear();
+  },
+
   // History utility functions
   formatDate(timestamp) {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
     
+    if (I18N.currentLanguage === 'en') {
+      // English relative time
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+      if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+    } else {
+      // German relative time
     if (diff < 60000) return 'Gerade eben';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
     if (diff < 604800000) return `${Math.floor(diff / 86400000)}d`;
+    }
     
-    return date.toLocaleDateString('de-DE', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: '2-digit' 
-    });
+    return I18N.formatDate(date, { short: true });
   },
 
   getFaviconUrl(url) {
@@ -206,19 +781,428 @@ const Storage = {
   async getFolders() {
     const folders = await this.get('folders', {});
     
-    // Ensure all folders have arrays
+    // Validiere und bereinige Ordner-Daten
+    const validatedFolders = {};
+    
     for (const folderName in folders) {
+      // Validiere Ordnername
+      const sanitizedName = Utils.sanitizeInput(folderName);
+      if (!sanitizedName || sanitizedName.length > CONFIG.MAX_FOLDER_NAME_LENGTH) {
+        console.warn('Invalid folder name:', folderName);
+        continue;
+      }
+      
+      // Validiere Links-Array
       if (!Array.isArray(folders[folderName])) {
         console.warn('Folder is not an array:', folderName, folders[folderName]);
-        folders[folderName] = [];
+        validatedFolders[sanitizedName] = [];
+        continue;
       }
+      
+      // Validiere jeden Link im Ordner
+      const validatedLinks = folders[folderName].filter(link => {
+        if (!link || typeof link !== 'object') return false;
+        if (!link.url || !Utils.isValidUrl(link.url)) return false;
+        if (link.name && typeof link.name !== 'string') return false;
+        return true;
+      }).map(link => ({
+        id: link.id || Utils.generateId(),
+        url: Utils.sanitizeUrl(link.url),
+        name: link.name ? Utils.sanitizeInput(link.name) : '',
+        addedAt: link.addedAt || Date.now(),
+        starred: Boolean(link.starred)
+      }));
+      
+      validatedFolders[sanitizedName] = validatedLinks;
     }
     
-    return folders;
+    return validatedFolders;
   },
 
   async setFolders(folders) {
+    // Validiere vor dem Speichern
+    if (!folders || typeof folders !== 'object') {
+      throw new Error('Invalid folders data: must be an object');
+    }
+    
+    // Storage monitoring and cleanup
+    const storageResult = await this.checkStorageHealth(folders);
+    if (!storageResult.canSave) {
+      throw new Error(storageResult.message);
+    }
+    
     return this.set({ folders });
+  },
+
+  // Advanced storage health monitoring
+  async checkStorageHealth(newData) {
+    try {
+      // Get current storage usage
+      const currentData = await this.get('folders');
+      const currentSize = JSON.stringify(currentData).length;
+      const newSize = JSON.stringify(newData).length;
+      
+      // Chrome storage.local limit: 10MB, use 7MB as safe limit
+      const SAFE_LIMIT = 7 * 1024 * 1024; // 7MB
+      const WARNING_LIMIT = 6 * 1024 * 1024; // 6MB
+      
+      if (newSize > SAFE_LIMIT) {
+        // Try to cleanup old data
+        const cleanedData = await this.performStorageCleanup(newData);
+        const cleanedSize = JSON.stringify(cleanedData).length;
+        
+        if (cleanedSize > SAFE_LIMIT) {
+          return {
+            canSave: false,
+            message: `Speicher voll (${(newSize / 1024 / 1024).toFixed(1)}MB). Bitte löschen Sie alte Ordner oder Links.`
+          };
+        }
+        
+        // Use cleaned data
+        Object.assign(newData, cleanedData);
+        Utils.showMessage('Alte Daten wurden automatisch bereinigt.', 'info');
+      } else if (newSize > WARNING_LIMIT) {
+        Utils.showMessage(`Speicher wird knapp: ${(newSize / 1024 / 1024).toFixed(1)}MB von 7MB verwendet.`, 'warning');
+      }
+      
+      return { canSave: true };
+    } catch (error) {
+      console.error('Storage health check failed:', error);
+      return { canSave: true }; // Fall back to normal save
+    }
+  },
+
+  // Automatic storage cleanup
+  async performStorageCleanup(folders) {
+    const cleanedFolders = { ...folders };
+    let totalRemoved = 0;
+    
+    // Strategy 1: Remove empty folders
+    Object.keys(cleanedFolders).forEach(folderName => {
+      if (!cleanedFolders[folderName] || 
+          !cleanedFolders[folderName].links || 
+          cleanedFolders[folderName].links.length === 0) {
+        delete cleanedFolders[folderName];
+        totalRemoved++;
+      }
+    });
+    
+    // Strategy 2: Remove oldest links if still too large
+    const currentSize = JSON.stringify(cleanedFolders).length;
+    if (currentSize > 6 * 1024 * 1024) { // Still too large
+      Object.keys(cleanedFolders).forEach(folderName => {
+        const folder = cleanedFolders[folderName];
+        if (folder.links && folder.links.length > 50) {
+          // Keep only newest 50 links per folder
+          folder.links = folder.links
+            .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
+            .slice(0, 50);
+          totalRemoved += folder.links.length - 50;
+        }
+      });
+    }
+    
+    if (totalRemoved > 0) {
+      console.log(`Storage cleanup: removed ${totalRemoved} items`);
+    }
+    
+    return cleanedFolders;
+  }
+};
+
+// ===== ACTIVITY SNAPSHOT MANAGER =====
+const ActivitySnapshotManager = {
+  // Configuration for activity detection
+  config: {
+    INACTIVITY_THRESHOLD: 30 * 60 * 1000, // 30 minutes of inactivity starts new block
+    MIN_ACTIVITY_DURATION: 5 * 60 * 1000, // Minimum 5 minutes for an activity block
+    MAX_ACTIVITY_DURATION: 4 * 60 * 60 * 1000, // Maximum 4 hours for an activity block
+    MIN_ENTRIES_FOR_BLOCK: 2, // Minimum entries to form an activity block
+  },
+
+  // Simple time-based activity detection
+  config: {
+    INACTIVITY_THRESHOLD: 15 * 60 * 1000, // 15 minutes of inactivity starts new block
+    MIN_ENTRIES_FOR_BLOCK: 2, // Minimum entries to form an activity block
+  },
+
+  // Detect activity blocks from history entries
+  detectActivityBlocks(historyEntries) {
+    if (!historyEntries || historyEntries.length === 0) {
+      return [];
+    }
+
+    // CRITICAL FIX: Sort entries chronologically first!
+    const sortedEntries = [...historyEntries].sort((a, b) => a.lastVisitTime - b.lastVisitTime);
+
+    console.log('Detecting activity blocks from', sortedEntries.length, 'entries');
+    console.log('First entry:', new Date(sortedEntries[0].lastVisitTime));
+    console.log('Last entry:', new Date(sortedEntries[sortedEntries.length - 1].lastVisitTime));
+
+    const blocks = [];
+    let currentBlock = {
+      startTime: sortedEntries[0].lastVisitTime,
+      endTime: sortedEntries[0].lastVisitTime,
+      entries: [sortedEntries[0]]
+    };
+
+    for (let i = 1; i < sortedEntries.length; i++) {
+      const entry = sortedEntries[i];
+      const prevEntry = sortedEntries[i - 1];
+      const timeDiff = entry.lastVisitTime - prevEntry.lastVisitTime;
+
+      // Debug logging for large time differences
+      if (timeDiff > 5 * 60 * 1000) { // Log gaps > 5 minutes
+        console.log(`Large gap detected: ${Math.round(timeDiff / 60000)}min between entries`);
+        console.log('Previous:', new Date(prevEntry.lastVisitTime), prevEntry.title);
+        console.log('Current:', new Date(entry.lastVisitTime), entry.title);
+      }
+
+      // Check if this should start a new activity block
+      if (timeDiff > this.config.INACTIVITY_THRESHOLD) {
+        // Finalize current block if it meets minimum criteria
+        if (currentBlock.entries.length >= this.config.MIN_ENTRIES_FOR_BLOCK) {
+          currentBlock.endTime = prevEntry.lastVisitTime;
+          const block = this.finalizeActivityBlock(currentBlock);
+          console.log('Created block:', block.startTimeFormatted, `(${block.entryCount} entries)`);
+          blocks.push(block);
+        }
+
+        // Start new block
+        currentBlock = {
+          startTime: entry.lastVisitTime,
+          endTime: entry.lastVisitTime,
+          entries: [entry]
+        };
+      } else {
+        // Continue current block
+        currentBlock.entries.push(entry);
+        currentBlock.endTime = entry.lastVisitTime;
+      }
+    }
+
+    // Add final block if it meets criteria
+    if (currentBlock.entries.length >= this.config.MIN_ENTRIES_FOR_BLOCK) {
+      const block = this.finalizeActivityBlock(currentBlock);
+      console.log('Created final block:', block.startTimeFormatted, `(${block.entryCount} entries)`);
+      blocks.push(block);
+    }
+
+    console.log('Total blocks created:', blocks.length);
+    // Sort blocks by start time (newest first for timeline display)
+    return blocks.sort((a, b) => b.startTime - a.startTime);
+  },
+
+
+
+  // Finalize an activity block with additional metadata
+  finalizeActivityBlock(block) {
+    const duration = block.endTime - block.startTime;
+    
+    return {
+      ...block,
+      id: `activity-${block.startTime}-${block.entries.length}`,
+      duration: duration,
+      entryCount: block.entries.length,
+      startTimeFormatted: this.formatTimeRange(block.startTime, block.endTime),
+      durationFormatted: this.formatDuration(duration)
+    };
+  },
+
+  // Format time range according to current language
+  formatTimeRange(startTime, endTime) {
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    
+    const startTime24 = I18N.formatTime(startDate);
+    const endTime24 = I18N.formatTime(endDate);
+    
+    // Just show start time for the snapshot header
+    return startTime24;
+  },
+
+  // Format duration in human readable format
+  formatDuration(duration) {
+    const minutes = Math.floor(duration / (60 * 1000));
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  },
+
+  // Create activity snapshot element
+  createActivitySnapshotElement(block) {
+    const snapshotEl = document.createElement('div');
+    snapshotEl.className = 'activity-snapshot';
+    snapshotEl.dataset.activityId = block.id;
+    
+    snapshotEl.innerHTML = `
+      <div class="activity-header" tabindex="0" role="button" aria-expanded="false">
+        <div class="activity-main">
+          <div class="activity-info">
+            <span class="activity-time">${block.startTimeFormatted}</span>
+                            <span class="activity-duration">${block.entryCount} ${block.entryCount === 1 ? I18N.t('page') : I18N.t('pages')}</span>
+          </div>
+        </div>
+        <div class="activity-meta">
+          <span class="activity-caret"></span>
+        </div>
+      </div>
+      <div class="activity-details" style="display: none;"></div>
+    `;
+
+    // Add click handler for expanding details
+    const header = snapshotEl.querySelector('.activity-header');
+    const details = snapshotEl.querySelector('.activity-details');
+    
+    header.addEventListener('click', () => {
+      const isExpanded = header.getAttribute('aria-expanded') === 'true';
+      
+      if (isExpanded) {
+        // Collapse
+        header.setAttribute('aria-expanded', 'false');
+        details.style.display = 'none';
+      } else {
+        // Expand
+        header.setAttribute('aria-expanded', 'true');
+        details.style.display = 'block';
+        this.renderActivityDetails(block, details);
+      }
+    });
+
+    // Keyboard support
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        header.click();
+      }
+    });
+
+    return snapshotEl;
+  },
+
+  // Render detailed view of activity block
+  renderActivityDetails(block, container) {
+    container.innerHTML = `
+      <div class="activity-entries">
+        ${block.entries.map(entry => `
+          <div class="activity-entry" data-history-id="${entry.id}">
+            <img src="${entry.favicon}" alt="" class="entry-favicon" onerror="this.style.display='none'">
+            <div class="entry-content">
+              <div class="entry-title">${entry.title || entry.url}</div>
+              <div class="entry-url">${entry.url}</div>
+            </div>
+            <div class="entry-actions">
+              <input type="checkbox" class="entry-checkbox" ${HistoryManager.selectedItems.has(entry.id) ? 'checked' : ''}>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    // Add event listeners for checkboxes and drag & drop
+    container.querySelectorAll('.entry-checkbox').forEach((checkbox, index) => {
+      checkbox.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const entry = block.entries[index];
+        const entryEl = checkbox.closest('.activity-entry');
+        HistoryManager.toggleHistoryItem(entry.id, entryEl);
+      });
+    });
+
+    // Add drag & drop to activity entries
+    container.querySelectorAll('.activity-entry').forEach((entryEl, index) => {
+      const entry = block.entries[index];
+      HistoryManager.setupHistoryItemDragAndDrop(entryEl, entry, index);
+    });
+  },
+
+  // Render all activity snapshots
+  renderActivitySnapshots(historyItems) {
+    const blocks = this.detectActivityBlocks(historyItems);
+    
+    Utils.clearElement(DOM.historyList);
+    
+    // Create vertical timeline line (will be adjusted later)
+    const timelineLine = document.createElement('div');
+    timelineLine.className = 'timeline-line';
+    timelineLine.style.cssText = `
+      position: absolute;
+      left: 24px;
+      top: 0;
+      width: 2px;
+      background: #e1e5e9;
+      z-index: 1;
+      height: 100px;
+      border-radius: 1px;
+    `;
+    DOM.historyList.appendChild(timelineLine);
+    
+    if (blocks.length === 0) {
+      DOM.historyList.innerHTML = `
+        <div class="history-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h4>${I18N.t('noActivities')}</h4>
+          <p>${I18N.t('noActivityBlocks')}</p>
+        </div>
+      `;
+      return;
+    }
+
+
+
+    // Add activity snapshots to the list
+    let lastDate = null;
+    
+    blocks.forEach((block, index) => {
+      const blockDate = new Date(block.startTime);
+      const currentDate = blockDate.toDateString();
+      
+      // Add date separator if it's a new day
+      if (currentDate !== lastDate) {
+        const dateSeparator = document.createElement('div');
+        dateSeparator.className = 'timeline-date-separator';
+        
+        const today = new Date();
+        const isToday = blockDate.toDateString() === today.toDateString();
+        
+        const labelClass = isToday ? 'timeline-date-label today' : 'timeline-date-label';
+        const labelText = isToday ? I18N.t('today') : I18N.formatDate(blockDate, { short: true });
+        
+        dateSeparator.innerHTML = `<span class="${labelClass}">${labelText}</span>`;
+        DOM.historyList.appendChild(dateSeparator);
+        
+        lastDate = currentDate;
+      }
+      
+      const snapshotEl = this.createActivitySnapshotElement(block);
+      DOM.historyList.appendChild(snapshotEl);
+    });
+
+    // Add minimal timeline end spacer
+    const timelineEnd = document.createElement('div');
+    timelineEnd.className = 'timeline-end';
+    DOM.historyList.appendChild(timelineEnd);
+
+    // Dynamically adjust timeline line height to match content
+    Utils.setSafeTimeout(() => {
+      const timelineLine = DOM.historyList.querySelector('.timeline-line');
+      const lastElement = DOM.historyList.lastElementChild;
+      if (timelineLine && lastElement) {
+        const lastElementTop = lastElement.offsetTop;
+        const contentHeight = lastElementTop + 80; // 80px buffer for bottom spacing
+        timelineLine.style.height = contentHeight + 'px';
+      }
+    }, 100);
+
+    // Update selected count
+    HistoryManager.updateSelectedCount();
   }
 };
 
@@ -228,7 +1212,14 @@ const HistoryManager = {
   selectedItems: new Set(),
   isOpen: false,
 
-  async loadHistory(timeFilter = '168') {
+  // Day groups for lazy rendering per day
+  dayGroups: new Map(),
+  _renderedGroupCount: 0,
+  _groupsOrdered: [],
+  _loadingMore: false,
+  _pagination: { endTime: null, hasMore: true },
+
+  async loadHistory(timeFilter = 'all') {
     try {
       // Show loading state
       this.showLoadingState();
@@ -238,37 +1229,27 @@ const HistoryManager = {
       const hoursAgo = timeFilter === 'all' ? 0 : parseInt(timeFilter);
       const startTime = hoursAgo > 0 ? now - (hoursAgo * 60 * 60 * 1000) : 0;
       
-      console.log('Loading history with timeFilter:', timeFilter, 'startTime:', startTime);
+      console.log('Loading history with timeFilter:', timeFilter, 'startTime:', startTime, 'hoursAgo:', hoursAgo);
+      console.log('startTime as date:', new Date(startTime));
       
       // Check if chrome.history is available
       if (!chrome.history || !chrome.history.search) {
         throw new Error('History API nicht verfügbar. Stelle sicher, dass die "history" Permission aktiviert ist.');
       }
       
-      // Query Chrome history
-      const historyItems = await new Promise((resolve, reject) => {
-        chrome.history.search({
-          text: '',
-          startTime: startTime,
-          maxResults: 1000
-        }, (results) => {
-          if (chrome.runtime.lastError) {
-            console.error('Chrome history error:', chrome.runtime.lastError);
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            console.log('History results:', results);
-            resolve(results || []);
-          }
-        });
-      });
+      // Query Chrome history (initial batch)
+      const historyItems = await this.fetchHistoryBatch({ startTime, endTime: null, maxResults: 10000 });
       
-      console.log('Raw history items:', historyItems);
+      console.log('Raw history items count:', historyItems.length);
+      if (historyItems.length > 0) {
+        console.log('Date range:', new Date(Math.min(...historyItems.map(i => i.lastVisitTime))), 'to', new Date(Math.max(...historyItems.map(i => i.lastVisitTime))));
+      }
       
-      // Filter and process history items
+      // Filter and normalize
       this.historyItems = historyItems
         .filter(item => item.url && !item.url.startsWith('chrome://'))
         .map(item => ({
-          id: item.id,
+          id: item.id || `${item.url}-${item.lastVisitTime}`,
           url: item.url,
           title: item.title || item.url,
           lastVisitTime: item.lastVisitTime,
@@ -276,10 +1257,12 @@ const HistoryManager = {
           favicon: Utils.getFaviconUrl(item.url)
         }))
         .sort((a, b) => b.lastVisitTime - a.lastVisitTime); // Sort by most recent first
+
+      console.log('Processed history items:', this.historyItems.length);
       
-      console.log('Processed history items:', this.historyItems);
-      console.log('History items count:', this.historyItems.length);
-      
+      // Setup pagination marker
+      this._pagination.endTime = this.historyItems.length ? Math.min(...this.historyItems.map(i => i.lastVisitTime)) : null;
+      this._pagination.hasMore = (historyItems.length >= 10000);
       this.renderHistoryList();
       this.updateSelectedCount();
       
@@ -287,6 +1270,23 @@ const HistoryManager = {
       console.error('Error loading history:', error);
       this.showErrorState(error);
     }
+  },
+
+  fetchHistoryBatch({ startTime = 0, endTime = null, maxResults = 10000 }) {
+    return new Promise((resolve, reject) => {
+      const query = { text: '', startTime, maxResults };
+      if (endTime && Number.isFinite(endTime)) {
+        query.endTime = endTime;
+      }
+      chrome.history.search(query, (results) => {
+        if (chrome.runtime.lastError) {
+          console.error('Chrome history error:', chrome.runtime.lastError);
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(results || []);
+        }
+      });
+    });
   },
 
   showLoadingState() {
@@ -309,13 +1309,13 @@ const HistoryManager = {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
         </svg>
-        <h4>Fehler beim Laden</h4>
+                  <h4>${I18N.t('errorLoading')}</h4>
         <p>${errorMessage}</p>
         <p style="font-size: 11px; margin-top: 8px; opacity: 0.7;">
-          Stelle sicher, dass die "history" Permission aktiviert ist.
+          ${I18N.t('ensureHistoryPermission')}
         </p>
         <button onclick="location.reload()" style="margin-top: 12px; padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">
-          Extension neu laden
+          ${I18N.t('retryButton')}
         </button>
       </div>
     `;
@@ -323,77 +1323,34 @@ const HistoryManager = {
 
   renderHistoryList() {
     console.log('Rendering history list with', this.historyItems.length, 'items');
-    Utils.clearElement(DOM.historyList);
     
     if (this.historyItems.length === 0) {
       console.log('No history items to render');
+      Utils.clearElement(DOM.historyList);
       DOM.historyList.innerHTML = `
         <div class="history-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <h4>Kein Verlauf</h4>
-          <p>Keine Browserverlauf-Einträge gefunden.</p>
+          <h4>${I18N.t('noHistory')}</h4>
+          <p>${I18N.t('noHistoryEntries')}</p>
         </div>
       `;
       return;
     }
-    
-    let currentDay = null;
-    let renderedCount = 0;
-    
-    this.historyItems.forEach((item, index) => {
-      console.log('Processing history item:', item.title, 'at index:', index);
-      
-      const itemDate = new Date(item.lastVisitTime);
-      const itemDay = itemDate.toDateString();
-      
-      // Add day header if it's a new day
-      if (itemDay !== currentDay) {
-        const dayHeader = this.createDayHeader(itemDate);
-        DOM.historyList.appendChild(dayHeader);
-        currentDay = itemDay;
-      }
-      
-      const historyItem = this.createHistoryItem(item, index);
-      DOM.historyList.appendChild(historyItem);
-      renderedCount++;
-      
-      console.log('History item added to DOM:', historyItem);
-      console.log('History item in DOM:', DOM.historyList.contains(historyItem));
-    });
-    
-    console.log('Rendered', renderedCount, 'history items');
+
+    // Clear any existing day-based groups
+    this.dayGroups.clear();
+    this._groupsOrdered = [];
+    this._renderedGroupCount = 0;
+
+    // Always use activity snapshots
+    ActivitySnapshotManager.renderActivitySnapshots(this.historyItems);
   },
 
-  createDayHeader(date) {
-    const header = document.createElement('div');
-    header.className = 'history-day-header';
-    
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    let dayText;
-    if (date.toDateString() === today.toDateString()) {
-      dayText = 'Heute';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      dayText = 'Gestern';
-    } else {
-      dayText = date.toLocaleDateString('de-DE', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    }
-    
-    header.innerHTML = `
-      <div class="history-day-title">${dayText}</div>
-    `;
-    
-    return header;
-  },
+
+
+
 
   createHistoryItem(item, index) {
     console.log('Creating history item:', item.title, 'at index:', index);
@@ -409,19 +1366,37 @@ const HistoryManager = {
       li.classList.add('selected');
     }
     
-    li.innerHTML = `
-      <input type="checkbox" class="history-item-checkbox" ${isSelected ? 'checked' : ''}>
-      <img src="${item.favicon}" alt="" class="history-item-favicon" onerror="this.style.display='none'">
-      <div class="history-item-content">
-        <div class="history-item-title">${Utils.sanitizeInput(item.title)}</div>
-        <div class="history-item-url">${Utils.sanitizeInput(item.url)}</div>
-      </div>
-    `;
+    // Sichere DOM-Erstellung ohne innerHTML
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'history-item-checkbox';
+    checkbox.checked = isSelected;
     
-    // Add event listeners
-    const checkbox = li.querySelector('.history-item-checkbox');
-    const favicon = li.querySelector('.history-item-favicon');
-    const content = li.querySelector('.history-item-content');
+    const favicon = document.createElement('img');
+    favicon.src = item.favicon;
+    favicon.alt = '';
+    favicon.className = 'history-item-favicon';
+    favicon.onerror = () => favicon.style.display = 'none';
+    
+    const content = document.createElement('div');
+    content.className = 'history-item-content';
+    
+    const title = document.createElement('div');
+    title.className = 'history-item-title';
+    title.textContent = item.title || 'Unbekannter Titel';
+    
+    const url = document.createElement('div');
+    url.className = 'history-item-url';
+    url.textContent = item.url || '';
+    
+    content.appendChild(title);
+    content.appendChild(url);
+    
+    li.appendChild(checkbox);
+    li.appendChild(favicon);
+    li.appendChild(content);
+    
+    // Add event listeners (use already created elements)
     checkbox.addEventListener('change', (e) => {
       e.stopPropagation();
       this.toggleHistoryItem(item.id, li);
@@ -477,17 +1452,42 @@ const HistoryManager = {
     const handleMouseMove = (e) => {
       if (!isDragging) return;
       
+      // Drag Preview Position aktualisieren
+      if (dragPreview) {
+        dragPreview.style.left = (e.clientX + 10) + 'px';
+        dragPreview.style.top = (e.clientY - 10) + 'px';
+      }
+      
       // Visuelles Feedback für Drop-Zonen
       const folders = document.querySelectorAll('#folderList li');
+      let hoveredFolder = null;
+      
       folders.forEach(folder => {
         const rect = folder.getBoundingClientRect();
         if (e.clientX >= rect.left && e.clientX <= rect.right &&
             e.clientY >= rect.top && e.clientY <= rect.bottom) {
-          folder.classList.add('folder-drop-target');
+          folder.classList.add('drag-over');
+          hoveredFolder = folder;
         } else {
-          folder.classList.remove('folder-drop-target');
+          folder.classList.remove('drag-over');
         }
       });
+      
+      // Drop Indicator Position und Text aktualisieren
+      if (dropIndicator) {
+        if (hoveredFolder) {
+          const folderName = hoveredFolder.querySelector('.folder-name').textContent;
+          const selectedCount = window.currentDragData.selectedItems.length;
+          dropIndicator.textContent = selectedCount > 1 ? 
+            `${selectedCount} Einträge zu "${folderName}" hinzufügen` : 
+            `Zu "${folderName}" hinzufügen`;
+          dropIndicator.style.left = (e.clientX - dropIndicator.offsetWidth / 2) + 'px';
+          dropIndicator.style.top = (e.clientY - 50) + 'px';
+          dropIndicator.style.display = 'block';
+        } else {
+          dropIndicator.style.display = 'none';
+        }
+      }
     };
     
     const handleMouseUp = (e) => {
@@ -505,7 +1505,7 @@ const HistoryManager = {
             e.clientY >= rect.top && e.clientY <= rect.bottom) {
           dropTarget = folder;
         }
-        folder.classList.remove('folder-drop-target');
+        folder.classList.remove('drag-over');
       });
       
       // Drop ausführen
@@ -519,7 +1519,7 @@ const HistoryManager = {
         dropTarget.style.borderLeft = '3px solid var(--accent)';
         
         // Feedback nach 500ms zurücksetzen
-        setTimeout(() => {
+        Utils.setSafeTimeout(() => {
           dropTarget.style.backgroundColor = '';
           dropTarget.style.borderLeft = '';
         }, 500);
@@ -540,17 +1540,35 @@ const HistoryManager = {
       isDragging = false;
       draggedElement = null;
       
+      // Visuelles Cleanup für das gedraggte Element
       if (li) {
-        li.style.opacity = '';
-        li.style.transform = '';
+        li.classList.remove('dragging', 'selected');
       }
+      
+      // Drag Preview entfernen
+      if (dragPreview && dragPreview.parentNode) {
+        dragPreview.parentNode.removeChild(dragPreview);
+        dragPreview = null;
+      }
+      
+      // Drop Indicator entfernen
+      if (dropIndicator && dropIndicator.parentNode) {
+        dropIndicator.parentNode.removeChild(dropIndicator);
+        dropIndicator = null;
+      }
+      
+      // Alle Ordner Drop-Highlights entfernen
+      const allFolders = document.querySelectorAll('#folderList li');
+      allFolders.forEach(folder => {
+        folder.classList.remove('drag-over');
+      });
       
       // Event-Listener entfernen
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       
       // Verzögerte Zurücksetzung der Drag-Daten, um Click-Outside-Handler zu vermeiden
-      setTimeout(() => {
+      Utils.setSafeTimeout(() => {
         window.currentDragData = null;
       }, 200);
     };
@@ -571,6 +1589,8 @@ const HistoryManager = {
     let isDragging = false;
     let dragStartX, dragStartY;
     let draggedElement = null;
+    let dragPreview = null;
+    let dropIndicator = null;
     
     li.addEventListener('mousedown', (e) => {
       // Nur links-klick für Drag starten
@@ -582,9 +1602,11 @@ const HistoryManager = {
       dragStartY = e.clientY;
       draggedElement = li;
       
-      // Visuelles Feedback
-      li.style.opacity = '0.5';
-      li.style.transform = 'scale(0.95)';
+      // Visuelles Feedback für den gedraggten Eintrag
+      li.classList.add('dragging');
+      if (this.selectedItems.has(item.id)) {
+        li.classList.add('selected');
+      }
       
       // Drag-Daten vorbereiten
       const dragData = {
@@ -597,6 +1619,14 @@ const HistoryManager = {
         isBulkDrag: this.selectedItems.has(item.id),
         selectedItems: this.selectedItems.has(item.id) ? Array.from(this.selectedItems) : [item.id]
       };
+      
+      // Drag Preview erstellen
+      dragPreview = this.createDragPreview(dragData);
+      document.body.appendChild(dragPreview);
+      
+      // Drop Indicator erstellen
+      dropIndicator = this.createDropIndicator();
+      document.body.appendChild(dropIndicator);
       
       // Globale Drag-Daten setzen
       window.currentDragData = dragData;
@@ -611,17 +1641,42 @@ const HistoryManager = {
     const handleMouseMove = (e) => {
       if (!isDragging) return;
       
+      // Drag Preview Position aktualisieren
+      if (dragPreview) {
+        dragPreview.style.left = (e.clientX + 10) + 'px';
+        dragPreview.style.top = (e.clientY - 10) + 'px';
+      }
+      
       // Visuelles Feedback für Drop-Zonen
       const folders = document.querySelectorAll('#folderList li');
+      let hoveredFolder = null;
+      
       folders.forEach(folder => {
         const rect = folder.getBoundingClientRect();
         if (e.clientX >= rect.left && e.clientX <= rect.right &&
             e.clientY >= rect.top && e.clientY <= rect.bottom) {
-          folder.classList.add('folder-drop-target');
+          folder.classList.add('drag-over');
+          hoveredFolder = folder;
         } else {
-          folder.classList.remove('folder-drop-target');
+          folder.classList.remove('drag-over');
         }
       });
+      
+      // Drop Indicator Position und Text aktualisieren
+      if (dropIndicator) {
+        if (hoveredFolder) {
+          const folderName = hoveredFolder.querySelector('.folder-name').textContent;
+          const selectedCount = window.currentDragData.selectedItems.length;
+          dropIndicator.textContent = selectedCount > 1 ? 
+            `${selectedCount} Einträge zu "${folderName}" hinzufügen` : 
+            `Zu "${folderName}" hinzufügen`;
+          dropIndicator.style.left = (e.clientX - dropIndicator.offsetWidth / 2) + 'px';
+          dropIndicator.style.top = (e.clientY - 50) + 'px';
+          dropIndicator.style.display = 'block';
+        } else {
+          dropIndicator.style.display = 'none';
+        }
+      }
     };
     
     const handleMouseUp = (e) => {
@@ -639,7 +1694,7 @@ const HistoryManager = {
             e.clientY >= rect.top && e.clientY <= rect.bottom) {
           dropTarget = folder;
         }
-        folder.classList.remove('folder-drop-target');
+        folder.classList.remove('drag-over');
       });
       
       // Drop ausführen
@@ -653,7 +1708,7 @@ const HistoryManager = {
         dropTarget.style.borderLeft = '3px solid var(--accent)';
         
         // Feedback nach 500ms zurücksetzen
-        setTimeout(() => {
+        Utils.setSafeTimeout(() => {
           dropTarget.style.backgroundColor = '';
           dropTarget.style.borderLeft = '';
         }, 500);
@@ -674,17 +1729,35 @@ const HistoryManager = {
       isDragging = false;
       draggedElement = null;
       
+      // Visuelles Cleanup für das gedraggte Element
       if (li) {
-        li.style.opacity = '';
-        li.style.transform = '';
+        li.classList.remove('dragging', 'selected');
       }
+      
+      // Drag Preview entfernen
+      if (dragPreview && dragPreview.parentNode) {
+        dragPreview.parentNode.removeChild(dragPreview);
+        dragPreview = null;
+      }
+      
+      // Drop Indicator entfernen
+      if (dropIndicator && dropIndicator.parentNode) {
+        dropIndicator.parentNode.removeChild(dropIndicator);
+        dropIndicator = null;
+      }
+      
+      // Alle Ordner Drop-Highlights entfernen
+      const allFolders = document.querySelectorAll('#folderList li');
+      allFolders.forEach(folder => {
+        folder.classList.remove('drag-over');
+      });
       
       // Event-Listener entfernen
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       
       // Verzögerte Zurücksetzung der Drag-Daten, um Click-Outside-Handler zu vermeiden
-      setTimeout(() => {
+      Utils.setSafeTimeout(() => {
         window.currentDragData = null;
       }, 200);
     };
@@ -714,38 +1787,33 @@ const HistoryManager = {
 
   selectHistoryRange(endIndex) {
     const items = Array.from(DOM.historyList.querySelectorAll('.history-item'));
-    const lastSelectedIndex = this.getLastSelectedIndex();
-    
+    const lastSelectedIndex = this.getLastSelectedIndexVisible(items);
     if (lastSelectedIndex === -1) {
-      // No previous selection, just select the clicked item
-      this.toggleHistoryItem(this.historyItems[endIndex].id, items[endIndex]);
+      const el = items[endIndex];
+      if (!el) return;
+      this.toggleHistoryItem(el.dataset.historyId, el);
       return;
     }
-    
     const startIndex = Math.min(lastSelectedIndex, endIndex);
     const endIdx = Math.max(lastSelectedIndex, endIndex);
-    
-    // Select all items in range
     for (let i = startIndex; i <= endIdx; i++) {
-      const item = this.historyItems[i];
-      const element = items[i];
-      if (item && element) {
-        this.selectedItems.add(item.id);
-        element.classList.add('selected');
-        element.querySelector('.history-item-checkbox').checked = true;
-      }
+      const el = items[i];
+      if (!el) continue;
+      const id = el.dataset.historyId;
+      this.selectedItems.add(id);
+      el.classList.add('selected');
+      const cb = el.querySelector('.history-item-checkbox');
+      if (cb) cb.checked = true;
     }
-    
     this.updateSelectedCount();
     this.updateSelectAllState();
   },
 
-  getLastSelectedIndex() {
+  getLastSelectedIndexVisible(visibleNodes) {
     const selectedItems = Array.from(this.selectedItems);
     if (selectedItems.length === 0) return -1;
-    
     const lastSelectedId = selectedItems[selectedItems.length - 1];
-    return this.historyItems.findIndex(item => item.id === lastSelectedId);
+    return visibleNodes.findIndex(el => el.dataset.historyId === lastSelectedId);
   },
 
   async handleHistoryItemDrop(e, targetFolderName) {
@@ -843,9 +1911,13 @@ const HistoryManager = {
     if (this.selectedItems.has(itemId)) {
       this.selectedItems.delete(itemId);
       element.classList.remove('selected');
+      const cb = element.querySelector('.history-item-checkbox');
+      if (cb) cb.checked = false;
     } else {
       this.selectedItems.add(itemId);
       element.classList.add('selected');
+      const cb = element.querySelector('.history-item-checkbox');
+      if (cb) cb.checked = true;
     }
     this.updateSelectedCount();
     this.updateSelectAllState();
@@ -866,17 +1938,26 @@ const HistoryManager = {
   },
 
   selectAllHistory() {
-    this.historyItems.forEach(item => {
-      this.selectedItems.add(item.id);
+    this.historyItems.forEach(item => { this.selectedItems.add(item.id); });
+    // Update only currently rendered items
+    const nodes = DOM.historyList.querySelectorAll('.history-item');
+    nodes.forEach((el) => {
+      el.classList.add('selected');
+      const cb = el.querySelector('.history-item-checkbox');
+      if (cb) cb.checked = true;
     });
-    this.renderHistoryList();
     this.updateSelectedCount();
     this.updateSelectAllState();
   },
 
   deselectAllHistory() {
     this.selectedItems.clear();
-    this.renderHistoryList();
+    const nodes = DOM.historyList.querySelectorAll('.history-item');
+    nodes.forEach((el) => {
+      el.classList.remove('selected');
+      const cb = el.querySelector('.history-item-checkbox');
+      if (cb) cb.checked = false;
+    });
     this.updateSelectedCount();
     this.updateSelectAllState();
   },
@@ -940,7 +2021,13 @@ const HistoryManager = {
       item.url.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
+    if (searchTerm.trim() === '') {
+      // If no search term, use activity snapshots
+      ActivitySnapshotManager.renderActivitySnapshots(this.historyItems);
+    } else {
+      // If searching, use traditional list view
     this.renderFilteredHistory(filteredItems);
+    }
   },
 
   renderFilteredHistory(filteredItems) {
@@ -989,13 +2076,42 @@ const HistoryManager = {
       console.log('DOM.historyOverlay exists:', !!DOM.historyOverlay);
       console.log('DOM.historyList exists:', !!DOM.historyList);
       DOM.historyOverlay.classList.add('open');
-      DOM.historyToggleBtn.classList.add('active');
-      this.loadHistory(DOM.historyTimeFilter.value);
+      if (DOM.quickHistoryBtn) {
+        DOM.quickHistoryBtn.classList.add('active');
+      }
+      this.loadHistory('all');
     } else {
       console.log('Closing history overlay');
       DOM.historyOverlay.classList.remove('open');
-      DOM.historyToggleBtn.classList.remove('active');
+      if (DOM.quickHistoryBtn) {
+        DOM.quickHistoryBtn.classList.remove('active');
+      }
     }
+  },
+
+  // Create drag preview element
+  createDragPreview(dragData) {
+    const preview = document.createElement('div');
+    preview.className = 'drag-preview';
+    
+    if (dragData.isBulkDrag && dragData.selectedItems.length > 1) {
+      preview.classList.add('multi-item');
+      preview.setAttribute('data-count', dragData.selectedItems.length);
+      preview.textContent = `${dragData.selectedItems.length} Einträge verschieben`;
+    } else {
+      preview.textContent = dragData.title || 'Link verschieben';
+    }
+    
+    return preview;
+  },
+
+  // Create drop indicator element
+  createDropIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'drop-indicator';
+    indicator.style.display = 'none';
+    indicator.textContent = 'Zu Ordner hinzufügen';
+    return indicator;
   }
 };
 
@@ -1070,9 +2186,25 @@ const EventHandlers = {
 
   handleDragEnd(e) {
     // Remove all folder drop targets when drag ends
-    document.querySelectorAll('.folder-drop-target').forEach(element => {
-      element.classList.remove('folder-drop-target');
+    document.querySelectorAll('.folder-drop-target, .drag-over').forEach(element => {
+      element.classList.remove('folder-drop-target', 'drag-over');
     });
+    
+    // Remove all dragging states
+    document.querySelectorAll('.dragging').forEach(element => {
+      element.classList.remove('dragging', 'selected');
+    });
+    
+    // Remove drag preview and drop indicator if they exist
+    const dragPreview = document.querySelector('.drag-preview');
+    if (dragPreview && dragPreview.parentNode) {
+      dragPreview.parentNode.removeChild(dragPreview);
+    }
+    
+    const dropIndicator = document.querySelector('.drop-indicator');
+    if (dropIndicator && dropIndicator.parentNode) {
+      dropIndicator.parentNode.removeChild(dropIndicator);
+    }
     
     // Reset dragged element styles
     if (State.draggedElement) {
@@ -1081,6 +2213,9 @@ const EventHandlers = {
       State.draggedElement.style.boxShadow = '';
       State.draggedElement = null;
     }
+    
+    // Clear global drag data
+    window.currentDragData = null;
   }
 };
 
@@ -1418,19 +2553,19 @@ async loadFolders() {
   async createFolder() {
     const name = Utils.sanitizeInput(DOM.newFolderInput.value.trim());
     if (name === "") {
-      Utils.showMessage('Bitte geben Sie einen Ordnernamen ein.', 'error');
+      Utils.showMessage('folderNameRequired', 'error');
       return;
     }
     
     if (name.length > CONFIG.MAX_FOLDER_NAME_LENGTH) {
-      Utils.showMessage(`Ordnername zu lang (max. ${CONFIG.MAX_FOLDER_NAME_LENGTH} Zeichen).`, 'error');
+      Utils.showMessage('folderNameTooLong', 'error');
       return;
     }
     
     try {
       const folders = await Storage.getFolders();
       if (folders[name]) {
-        Utils.showMessage('Ordner existiert bereits.', 'error');
+        Utils.showMessage('folderExists', 'error');
         return;
       }
       
@@ -1448,7 +2583,7 @@ async loadFolders() {
       // Check if we should hide onboarding after creating first folder
       await OnboardingManager.checkAndShowOnboarding();
       
-      Utils.showMessage('Ordner erfolgreich erstellt.');
+      Utils.showMessage('folderCreated');
     } catch (error) {
       Utils.showMessage('Fehler beim Erstellen des Ordners: ' + error.message, 'error');
     }
@@ -1574,138 +2709,14 @@ async loadFolders() {
       }
       
       await this.loadFolders();
-             Utils.showMessage('Ordner erfolgreich gelöscht.');
+             Utils.showMessage('folderDeleted');
      } catch (error) {
        Utils.showMessage('Fehler beim Löschen des Ordners: ' + error.message, 'error');
      }
    },
 
    
-   createShareDialog(folderName, linkCount = '0') {
-     console.log('Creating share dialog for folder:', folderName);
-     const dialog = document.createElement('div');
-     dialog.className = 'share-dialog-overlay';
-     dialog.innerHTML = `
-       <div class="share-dialog">
-         <div class="share-dialog-header">
-           <div class="share-icon">
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-               <path d="M15 3C15 2.44772 15.4477 2 16 2C19.3137 2 22 4.68629 22 8V16C22 19.3137 19.3137 22 16 22H8C4.68629 22 2 19.3137 2 16C2 15.4477 2.44772 15 3 15C3.55228 15 4 15.4477 4 16C4 18.2091 5.79086 20 8 20H16C18.2091 20 20 18.2091 20 16V8C20 5.79086 18.2091 4 16 4C15.4477 4 15 3.55228 15 3Z" fill="currentColor"/>
-               <path d="M3.70663 12.7845L3.16104 12.2746L3.70664 12.7845C4.09784 12.3659 4.62287 11.8265 5.17057 11.3274C5.72852 10.8191 6.26942 10.3905 6.69641 10.1599C7.06268 9.96208 7.75042 9.84035 8.40045 9.84848C8.62464 9.85128 8.81365 9.86944 8.9559 9.89472C8.96038 10.5499 8.95447 11.7469 8.95145 12.2627C8.94709 13.0099 9.83876 13.398 10.3829 12.8878L14.9391 8.61636C15.2845 8.2926 15.2988 7.74908 14.971 7.4076L10.4132 2.65991C9.88293 2.10757 8.95 2.48291 8.95 3.24856V5.16793C8.5431 5.13738 8.0261 5.11437 7.47937 5.13009C6.5313 5.15734 5.30943 5.30257 4.4722 5.88397C4.36796 5.95636 4.26827 6.03539 4.17359 6.11781C2.49277 7.58092 2.11567 9.90795 1.8924 11.7685L1.87242 11.935C1.74795 12.9722 3.02541 13.5134 3.70663 12.7845ZM9.35701 11.7935L9.70204 12.1615L9.35701 11.7935C9.35715 11.7934 9.35729 11.7932 9.35744 11.7931L9.35701 11.7935Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-             </svg>
-           </div>
-           <h3>Share-Code generieren</h3>
-           <button class="close-btn" id="closeShareBtn">
-             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-             </svg>
-           </button>
-         </div>
-         <div class="share-dialog-content">
-           <div class="share-folder-info">
-             <span class="folder-name">${folderName}</span>
-             <span class="folder-count">${linkCount} Links</span>
-             <p class="share-info-text">Ein kurzer Code wird generiert, den Sie per Email oder Chat teilen können.</p>
-           </div>
-           
-           <div class="share-code-display" id="shareCodeDisplay" style="display: none;">
-             <div class="code-field">
-               <input type="text" id="generatedCode" readonly placeholder="Code wird generiert..." />
-               <button class="copy-code-btn" id="copyCodeBtn" title="Code kopieren">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                   <path fill-rule="evenodd" clip-rule="evenodd" d="M19.5 16.5L19.5 4.5L18.75 3.75H9L8.25 4.5L8.25 7.5L5.25 7.5L4.5 8.25V20.25L5.25 21H15L15.75 20.25V17.25H18.75L19.5 16.5ZM15.75 15.75L15.75 8.25L15 7.5L9.75 7.5V5.25L18 5.25V15.75H15.75ZM6 9L14.25 9L14.25 19.5L6 19.5L6 9Z" fill="currentColor"/>
-                 </svg>
-               </button>
-             </div>
-           </div>
-
-           <div class="share-permissions">
-             <div class="permission-tabs">
-               <button class="permission-tab active" data-permission="view">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
-                   <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                 </svg>
-                 Nur anzeigen
-               </button>
-               <button class="permission-tab" data-permission="edit">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2"/>
-                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2"/>
-                 </svg>
-                 Bearbeiten
-               </button>
-             </div>
-           </div>
-           <div class="share-actions">
-             <button class="share-btn" id="generateShareBtn" data-folder-name="${folderName}">
-               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="currentColor" stroke-width="2"/>
-                 <polyline points="16,6 12,2 8,6" stroke="currentColor" stroke-width="2"/>
-                 <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="2"/>
-               </svg>
-               Code generieren
-             </button>
-           </div>
-         </div>
-       </div>
-     `;
-     
-     // Add event listeners for permission tabs
-     setTimeout(() => {
-       const tabs = dialog.querySelectorAll('.permission-tab');
-       tabs.forEach(tab => {
-         tab.addEventListener('click', () => {
-           tabs.forEach(t => t.classList.remove('active'));
-           tab.classList.add('active');
-  });
-});
-
-       // Add event listeners for buttons
-       const closeBtn = dialog.querySelector('#closeShareBtn');
-       const generateBtn = dialog.querySelector('#generateShareBtn');
-       
-       if (closeBtn) {
-         closeBtn.addEventListener('click', () => {
-           console.log('Close button clicked');
-           dialog.remove();
-         });
-       }
-       
-       if (generateBtn) {
-         generateBtn.addEventListener('click', async () => {
-           console.log('Generate button clicked');
-           const folderName = generateBtn.dataset.folderName;
-           try {
-             const shareCode = await FolderManager.generateShareCodeAndDisplay(folderName, dialog);
-             // Don't close dialog automatically, let user copy the code
-           } catch (error) {
-             console.error('Error generating share code:', error);
-           }
-         });
-       }
-       
-       // Add copy button event listener
-       const copyBtn = dialog.querySelector('#copyCodeBtn');
-       if (copyBtn) {
-         copyBtn.addEventListener('click', async () => {
-           const codeInput = dialog.querySelector('#generatedCode');
-           if (codeInput && codeInput.value) {
-             try {
-               await navigator.clipboard.writeText(codeInput.value);
-               Utils.showMessage('Code in Zwischenablage kopiert!');
-             } catch (error) {
-               console.error('Error copying code:', error);
-               Utils.showMessage('Fehler beim Kopieren: ' + error.message, 'error');
-             }
-           }
-         });
-       }
-     }, 0);
-     
-     console.log('Share dialog created successfully');
-     return dialog;
-   },
+   // Share code functionality removed
 
   async getFolderLinkCount(folderName) {
      try {
@@ -1717,45 +2728,9 @@ async loadFolders() {
      }
    },
 
-       async generateShareCode(folderName) {
-      try {
-        const activeTab = document.querySelector('.permission-tab.active');
-        
-        if (!activeTab) {
-          Utils.showMessage('Bitte eine Berechtigung auswählen.', 'error');
-          return;
-        }
-        
-        const permission = activeTab.dataset.permission;
-        
-        // Generate share code
-        const shareCode = this.generateShareCodeString(folderName, permission);
-        console.log('Share code generated:', shareCode);
-        
-        // Store share data
-        await this.storeShareData(folderName, permission, shareCode);
-        
-        // Copy code to clipboard
-        await navigator.clipboard.writeText(shareCode);
-        
-        Utils.showMessage(`✅ Share-Code generiert: ${shareCode}`);
-        
-        return shareCode;
-      } catch (error) {
-        Utils.showMessage('Fehler beim Generieren: ' + error.message, 'error');
-        throw error;
-      }
-    },
+       
 
-    async generateShareCodeAndDisplay() { return; },
 
-   generateShareCodeString() { return ''; },
-
-   async storeShareData() { return; },
-
-   async getSharedFolders() { return {}; },
-
-   async removeShare() { return; },
 
    async copyFolderToClipboard(folderName) {
      try {
@@ -1855,114 +2830,11 @@ async loadFolders() {
 
 
 
-   createSharedFolderElement(folderName, share) {
-     const li = document.createElement('li');
-     li.className = 'shared-folder-item';
-     
-     // Sichere DOM-Erstellung ohne innerHTML
-     const infoDiv = document.createElement('div');
-     infoDiv.className = 'shared-folder-info';
-     
-     const nameSpan = document.createElement('span');
-     nameSpan.className = 'shared-folder-name';
-     nameSpan.textContent = Utils.sanitizeInput(folderName);
-     
-     const codeSpan = document.createElement('span');
-     codeSpan.className = 'shared-folder-code';
-     codeSpan.textContent = Utils.sanitizeInput(share.code);
-     
-     const permissionSpan = document.createElement('span');
-     permissionSpan.className = 'shared-folder-permission';
-     permissionSpan.textContent = share.permission === 'view' ? 'Nur anzeigen' : 'Bearbeiten';
-     
-     const removeBtn = document.createElement('button');
-     removeBtn.className = 'remove-share-btn';
-     removeBtn.textContent = '✕';
-     removeBtn.addEventListener('click', () => {
-       FolderManager.removeShare(folderName, share.code);
-     });
-     
-     infoDiv.appendChild(nameSpan);
-     infoDiv.appendChild(codeSpan);
-     infoDiv.appendChild(permissionSpan);
-     li.appendChild(infoDiv);
-     li.appendChild(removeBtn);
-     
-     return li;
-   },
+     // Share UI elements removed
 
-   async enterShareCode() {
-     try {
-       const code = DOM.shareCodeInput.value.trim().toUpperCase();
-       
-       if (!code) {
-         Utils.showMessage('Bitte einen Share-Code eingeben.', 'error');
-         return;
-       }
-       
-       if (!code.startsWith('LINK-')) {
-         Utils.showMessage('Ungültiger Share-Code Format. Erwartet: LINK-XXXXXX', 'error');
-         return;
-       }
-       
-       const shares = await this.getSharedFolders();
-       
-       // Search for the code in all shares
-       for (const [folderName, shareList] of Object.entries(shares)) {
-         const share = shareList.find(s => s.code === code);
-         if (share) {
-           // Check if share is expired
-           const expiresAt = new Date(share.expiresAt);
-           if (expiresAt < new Date()) {
-             Utils.showMessage('Share-Code ist abgelaufen.', 'error');
-             return;
-           }
-           
-           // Open the folder with fresh links from storage
-           const folders = await Storage.getFolders();
-           const folderLinks = folders[folderName] || [];
-           await this.openFolder(folderName, folderLinks);
-           DOM.shareCodeInput.value = '';
-           Utils.showMessage(`Ordner "${folderName}" erfolgreich geöffnet.`);
-           return;
-         }
-       }
-       
-       Utils.showMessage('Ungültiger Share-Code.', 'error');
-       
-     } catch (error) {
-       Utils.showMessage('Fehler beim Öffnen des Share-Codes: ' + error.message, 'error');
-     }
-   },
 
-  // Efficient update functions to avoid full reload
-   async updateFolderShareIndicators() {
-    try {
-      const shares = {}; // removed
-      const folderItems = document.querySelectorAll('#folderList li[data-folder-name]');
-      
-      folderItems.forEach(item => {
-        const folderName = item.dataset.folderName;
-        const shareIndicator = item.querySelector('.folder-share-indicator');
-        
-        if (shares[folderName] && shares[folderName].length > 0) {
-          if (!shareIndicator) {
-            // Add share indicator
-            const newIndicator = document.createElement('span');
-            newIndicator.className = 'folder-share-indicator';
-            newIndicator.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3C15 2.44772 15.4477 2 16 2C19.3137 2 22 4.68629 22 8V16C22 19.3137 19.3137 22 16 22H8C4.68629 22 2 19.3137 2 16C2 15.4477 2.44772 15 3 15C3.55228 15 4 15.4477 4 16C4 18.2091 5.79086 20 8 20H16C18.2091 20 20 18.2091 20 16V8C20 5.79086 18.2091 4 16 4C15.4477 4 15 3.55228 15 3Z"/></svg>`;
-            item.querySelector('.folder-name').appendChild(newIndicator);
-          }
-        } else {
-          if (shareIndicator) {
-            shareIndicator.remove();
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error updating share indicators:', error);
-    }
-  }
+
+  // Share functionality removed - no longer needed
 };
 
 // ===== LINK MANAGEMENT =====
@@ -2146,13 +3018,9 @@ const LinkManager = {
     dateDiv.className = "link-date";
     if (linkObj.addedAt) {
       const date = new Date(linkObj.addedAt);
-      dateDiv.textContent = date.toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: '2-digit'
-      });
+      dateDiv.textContent = I18N.formatDate(date, { short: true });
     } else {
-      dateDiv.textContent = "Unbekannt";
+      dateDiv.textContent = I18N.currentLanguage === 'en' ? 'Unknown' : 'Unbekannt';
     }
     return dateDiv;
   },
@@ -2189,12 +3057,19 @@ const LinkManager = {
     
     console.log('Creating star icon for link:', linkObj.id, 'starred:', linkObj.starred);
     
+    // Sichere SVG-Path-Erstellung
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z");
+    
     if (linkObj.starred) {
-      starSvg.innerHTML = '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>';
       starSvg.classList.add('starred');
     } else {
-      starSvg.innerHTML = '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/>';
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "currentColor");
+      path.setAttribute("stroke-width", "2");
     }
+    
+    starSvg.appendChild(path);
     
     // Remove inline styles to prevent conflicts
     IconManager.removeInlineStyles(starSvg);
@@ -2275,7 +3150,7 @@ const LinkManager = {
     const handleSave = async () => {
       const newName = Utils.sanitizeInput(input.value.trim());
       if (newName.length > 100) {
-        Utils.showMessage('Name zu lang (max. 100 Zeichen).', 'error');
+        Utils.showMessage('linkNameTooLong', 'error');
         return;
       }
       
@@ -2330,7 +3205,7 @@ const LinkManager = {
       // Find link by ID instead of index
       const linkIndex = folders[State.currentFolder].findIndex(link => link.id === linkId);
       if (linkIndex === -1) {
-        Utils.showMessage('Link konnte nicht gefunden werden.', 'error');
+        Utils.showMessage('linkNotFound', 'error');
         return;
       }
       
@@ -2373,7 +3248,7 @@ const LinkManager = {
       // Update folder count
       await updateFolderCountDirect(State.currentFolder);
       
-      Utils.showMessage('Link erfolgreich gelöscht.');
+      Utils.showMessage('linkDeleted');
     } catch (error) {
       Utils.showMessage('Fehler beim Löschen des Links: ' + error.message, 'error');
     }
@@ -2401,7 +3276,7 @@ const LinkManager = {
 
   async exportCsv() {
     if (!State.currentFolder) {
-      Utils.showMessage('Kein Ordner ausgewählt.', 'error');
+      Utils.showMessage('noFolderSelected', 'error');
       return;
     }
     
@@ -2409,7 +3284,7 @@ const LinkManager = {
     const freshLinks = folders[State.currentFolder] || [];
     
     if (!freshLinks || freshLinks.length === 0) {
-      Utils.showMessage('Keine Links zum Exportieren vorhanden.', 'error');
+      Utils.showMessage('noLinksToExport', 'error');
       return;
     }
     
@@ -2421,7 +3296,7 @@ const LinkManager = {
       const csvRows = freshLinks.map(link => {
         const name = (link.name || link.url || '').replace(/"/g, '""'); // Escape quotes
         const url = link.url.replace(/"/g, '""'); // Escape quotes
-        const date = link.addedAt ? new Date(link.addedAt).toLocaleDateString('de-DE') : 'Unbekannt';
+        const date = link.addedAt ? I18N.formatDate(new Date(link.addedAt), { short: true }) : (I18N.currentLanguage === 'en' ? 'Unknown' : 'Unbekannt');
         
         return `"${name}","${url}","${date}"`;
       }).join('\n');
@@ -2452,7 +3327,7 @@ const LinkManager = {
   async copyCurrentFolderLinks() {
     try {
       if (!State.currentFolder) {
-        Utils.showMessage('Kein Ordner ausgewählt.', 'error');
+        Utils.showMessage('noFolderSelected', 'error');
         return;
       }
       
@@ -2511,7 +3386,7 @@ const LinkManager = {
 
   async openAllLinks() {
     if (!State.currentFolder) {
-      Utils.showMessage('Kein Ordner ausgewählt.', 'error');
+      Utils.showMessage('noFolderSelected', 'error');
       return;
     }
     
@@ -2519,7 +3394,7 @@ const LinkManager = {
     const freshLinks = folders[State.currentFolder] || [];
     
     if (!freshLinks || freshLinks.length === 0) {
-      Utils.showMessage('Keine Links zum Öffnen vorhanden.', 'error');
+      Utils.showMessage('noLinksToOpen', 'error');
       return;
     }
     
@@ -2529,7 +3404,7 @@ const LinkManager = {
       });
       
       if (validLinks.length === 0) {
-        Utils.showMessage('Keine gültigen Links zum Öffnen gefunden.', 'error');
+        Utils.showMessage('noValidLinks', 'error');
         return;
       }
       
@@ -2600,7 +3475,7 @@ const LinkManager = {
      }
     
     if (linkIndex === -1) {
-      Utils.showMessage('Link konnte nicht gefunden werden.', 'error');
+      Utils.showMessage('linkNotFound', 'error');
       return;
     }
     
@@ -2834,14 +3709,21 @@ const IconManager = {
       const response = await fetch(chrome.runtime.getURL(filename));
       const svgText = await response.text();
 
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = svgText;
+      // Sichere SVG-Parsing nur für vertrauenswürdige lokale Dateien
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+      
+      // Prüfe auf Parser-Fehler
+      const errorNode = svgDoc.querySelector('parsererror');
+      if (errorNode) {
+        throw new Error('Invalid SVG file: ' + filename);
+      }
 
-      const svg = tempDiv.querySelector('svg');
+      const svg = svgDoc.querySelector('svg');
       if (svg) {
-  svg.classList.add("icon-svg");
+        svg.classList.add("icon-svg");
         this._cache.set(filename, svg.cloneNode(true));
-  return svg;
+        return svg;
       }
     } catch (error) {
       console.error('Error loading SVG:', error);
@@ -2958,19 +3840,19 @@ const TabManager = {
 
   async saveCurrentTab() {
     if (!State.currentFolder) {
-      Utils.showMessage('Bitte zuerst einen Ordner auswählen.', 'error');
+      Utils.showMessage('noFolderSelected', 'error');
       return;
     }
     
     if (!State.currentTab) {
-      Utils.showMessage('Aktueller Tab konnte nicht geladen werden.', 'error');
+      Utils.showMessage('currentTabError', 'error');
       return;
     }
     
     const url = State.currentTab.url;
     
     if (!Utils.isValidUrl(url)) {
-      Utils.showMessage('Ungültige URL vom aktuellen Tab.', 'error');
+      Utils.showMessage('invalidUrl', 'error');
       return;
     }
     
@@ -2983,7 +3865,7 @@ const TabManager = {
       
       const exists = folders[State.currentFolder].some(link => link.url === url);
       if (exists) {
-        Utils.showMessage('Link bereits vorhanden.', 'error');
+        Utils.showMessage('linkAlreadyExists', 'error');
         return;
       }
       
@@ -3013,7 +3895,7 @@ const TabManager = {
         await LinkManager.renderLinks(updatedLinks);
         await updateFolderCountDirect(State.currentFolder);
         // Don't call checkAndShowOnboarding here as it resets the view
-        Utils.showMessage('Tab erfolgreich hinzugefügt.');
+        Utils.showMessage('linkAdded');
       } catch (uiError) {
         console.error('Error updating UI after saving:', uiError);
         // Still show success message even if UI update fails
@@ -3138,7 +4020,7 @@ const OnboardingManager = {
     if (finishOnboardingBtn) {
       finishOnboardingBtn.addEventListener('click', () => {
         this.hideOnboarding();
-        Utils.showMessage('Willkommen bei Link Organizer! 🎉');
+        Utils.showMessage('welcomeMessage');
       });
     }
   },
@@ -3164,6 +4046,10 @@ const OnboardingManager = {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     console.log('DOMContentLoaded - Starting initialization...');
+    
+    // Initialize internationalization first
+    await I18N.loadLanguage();
+    I18N.updateUI();
     
     // Full-Page Modus Erkennung
     if (window.location.search.includes('fullpage=true') || 
@@ -3239,11 +4125,42 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.close(); // Popup schließen
     });
     
+    // Language Dropdown Event Handlers
+    if (DOM.languageToggle) {
+      DOM.languageToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        I18N.toggleDropdown();
+      });
+    }
+    
+    // Language Option Event Handlers
+    if (DOM.languageDropdown) {
+      DOM.languageDropdown.addEventListener('click', async (e) => {
+        const option = e.target.closest('.language-option');
+        if (option) {
+          const newLang = option.getAttribute('data-lang');
+          await I18N.switchLanguage(newLang);
+          I18N.closeDropdown();
+        }
+      });
+    }
+    
     // History Overlay Event Listeners
-    DOM.historyToggleBtn.addEventListener('click', () => HistoryManager.toggleHistoryOverlay());
+  if (DOM.quickHistoryBtn) {
+    console.log('Setting up quickHistoryBtn event listener', DOM.quickHistoryBtn);
+    DOM.quickHistoryBtn.addEventListener('click', () => {
+      console.log('Quick history button clicked!');
+      HistoryManager.toggleHistoryOverlay();
+    });
+  } else {
+    console.error('DOM.quickHistoryBtn not found!');
+  }
     DOM.closeHistoryBtn.addEventListener('click', () => HistoryManager.toggleHistoryOverlay());
     DOM.historySearchInput.addEventListener('input', (e) => HistoryManager.filterHistory(e.target.value));
-    DOM.historyTimeFilter.addEventListener('change', (e) => HistoryManager.loadHistory(e.target.value));
+
+    
+
     DOM.selectAllHistory.addEventListener('change', (e) => {
       if (e.target.checked) {
         HistoryManager.selectAllHistory();
@@ -3268,12 +4185,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (HistoryManager.isOpen && 
           !DOM.historyOverlay.contains(e.target) && 
-          !DOM.historyToggleBtn.contains(e.target)) {
+          !(DOM.quickHistoryBtn && DOM.quickHistoryBtn.contains(e.target))) {
         HistoryManager.toggleHistoryOverlay();
       }
     };
     
     document.addEventListener('click', clickOutsideHandler);
+    
+  // Cleanup on page unload to prevent memory leaks
+  window.addEventListener('beforeunload', () => {
+    Utils.clearAllTimeouts();
+    console.log('Cleaned up timeouts on page unload');
+  });
     
     // Copy Links functionality removed - focusing on history feature
     
@@ -3309,5 +4232,6 @@ window.SortManager = SortManager;
 window.IconManager = IconManager;
 window.EventHandlers = EventHandlers;
 window.HistoryManager = HistoryManager;
+window.ActivitySnapshotManager = ActivitySnapshotManager;
 
 
