@@ -22,6 +22,55 @@
 .app-logo:hover .app-logo-img {
   transform: scale(2.4);
 }
+/* CSP-Safe Classes for Error States */
+.error-message-small {
+  font-size: 11px !important;
+  margin-top: 8px !important;
+  opacity: 0.7 !important;
+}
+
+.retry-button {
+  margin-top: 12px !important;
+  padding: 8px 16px !important;
+  background: var(--accent) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 24px;
+  top: 0;
+  width: 2px;
+  background: #e1e5e9;
+  z-index: 1;
+  height: 100px;
+  border-radius: 1px;
+}
+
+/* Drag & Drop States */
+.dragging {
+  opacity: 0.5 !important;
+  transform: scale(0.95) !important;
+}
+
+.dragging-folder {
+  opacity: 0.5 !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+}
+
+.dragging-link {
+  opacity: 0.7 !important;
+  transform: scale(1.02) !important;
+}
+
 /* GLOBAL RESET */
 *,
 *::before,

@@ -1052,7 +1052,7 @@ const ActivitySnapshotManager = {
           <span class="activity-caret"></span>
         </div>
       </div>
-      <div class="activity-details" style="display: none;"></div>
+              <div class="activity-details hidden"></div>
     `;
 
     // Add click handler for expanding details
@@ -1065,11 +1065,11 @@ const ActivitySnapshotManager = {
       if (isExpanded) {
         // Collapse
         header.setAttribute('aria-expanded', 'false');
-        details.style.display = 'none';
+        details.classList.add('hidden');
       } else {
         // Expand
         header.setAttribute('aria-expanded', 'true');
-        details.style.display = 'block';
+        details.classList.remove('hidden');
         this.renderActivityDetails(block, details);
       }
     });
@@ -1091,7 +1091,7 @@ const ActivitySnapshotManager = {
       <div class="activity-entries">
         ${block.entries.map(entry => `
           <div class="activity-entry" data-history-id="${entry.id}">
-            <img src="${entry.favicon}" alt="" class="entry-favicon" onerror="this.style.display='none'">
+            <img src="${entry.favicon}" alt="" class="entry-favicon">
             <div class="entry-content">
               <div class="entry-title">${entry.title || entry.url}</div>
               <div class="entry-url">${entry.url}</div>
@@ -1114,6 +1114,13 @@ const ActivitySnapshotManager = {
       });
     });
 
+    // Add error handling for favicons
+    container.querySelectorAll('.entry-favicon').forEach((favicon) => {
+      favicon.addEventListener('error', () => {
+        favicon.style.display = 'none';
+      });
+    });
+
     // Add drag & drop to activity entries
     container.querySelectorAll('.activity-entry').forEach((entryEl, index) => {
       const entry = block.entries[index];
@@ -1130,16 +1137,6 @@ const ActivitySnapshotManager = {
     // Create vertical timeline line (will be adjusted later)
     const timelineLine = document.createElement('div');
     timelineLine.className = 'timeline-line';
-    timelineLine.style.cssText = `
-      position: absolute;
-      left: 24px;
-      top: 0;
-      width: 2px;
-      background: #e1e5e9;
-      z-index: 1;
-      height: 100px;
-      border-radius: 1px;
-    `;
     DOM.historyList.appendChild(timelineLine);
     
     if (blocks.length === 0) {
@@ -1311,14 +1308,22 @@ const HistoryManager = {
         </svg>
                   <h4>${I18N.t('errorLoading')}</h4>
         <p>${errorMessage}</p>
-        <p style="font-size: 11px; margin-top: 8px; opacity: 0.7;">
+        <p class="error-message-small">
           ${I18N.t('ensureHistoryPermission')}
         </p>
-        <button onclick="location.reload()" style="margin-top: 12px; padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">
+        <button id="retryButton" class="retry-button">
           ${I18N.t('retryButton')}
         </button>
       </div>
     `;
+
+    // Add event listener for retry button
+    const retryButton = DOM.historyList.querySelector('#retryButton');
+    if (retryButton) {
+      retryButton.addEventListener('click', () => {
+        location.reload();
+      });
+    }
   },
 
   renderHistoryList() {
@@ -1376,7 +1381,6 @@ const HistoryManager = {
     favicon.src = item.favicon;
     favicon.alt = '';
     favicon.className = 'history-item-favicon';
-    favicon.onerror = () => favicon.style.display = 'none';
     
     const content = document.createElement('div');
     content.className = 'history-item-content';
@@ -1402,6 +1406,11 @@ const HistoryManager = {
       this.toggleHistoryItem(item.id, li);
     });
     
+    // Add error handling for favicon
+    favicon.addEventListener('error', () => {
+      favicon.style.display = 'none';
+    });
+    
     li.addEventListener('click', (e) => {
       if (e.target !== checkbox) {
         this.handleHistoryItemClick(e, item.id, li, index);
@@ -1424,8 +1433,7 @@ const HistoryManager = {
       draggedElement = li;
       
       // Visuelles Feedback
-      li.style.opacity = '0.5';
-      li.style.transform = 'scale(0.95)';
+      li.classList.add('dragging');
       
       // Drag-Daten vorbereiten
       const dragData = {
@@ -2138,9 +2146,7 @@ const EventHandlers = {
     if (!li) return;
     State.draggedElement = li;
 
-    li.style.opacity = '0.5';
-    li.style.transform = 'scale(1.05)';
-    li.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+    li.classList.add('dragging-folder');
 
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', li.outerHTML);
@@ -2161,9 +2167,7 @@ const EventHandlers = {
   },
 
   handleDragEnd(e) {
-    e.target.style.opacity = '';
-    e.target.style.transform = '';
-    e.target.style.boxShadow = '';
+    e.target.classList.remove('dragging', 'dragging-folder', 'dragging-link');
   },
 
   handleFolderDragOver(e) {
@@ -2208,9 +2212,7 @@ const EventHandlers = {
     
     // Reset dragged element styles
     if (State.draggedElement) {
-      State.draggedElement.style.opacity = '';
-      State.draggedElement.style.transform = '';
-      State.draggedElement.style.boxShadow = '';
+      State.draggedElement.classList.remove('dragging', 'dragging-folder', 'dragging-link');
       State.draggedElement = null;
     }
     
@@ -2412,8 +2414,7 @@ async loadFolders() {
     // Visual feedback
     const draggedElement = e.target.closest('li');
     if (draggedElement) {
-      draggedElement.style.opacity = '0.7';
-      draggedElement.style.transform = 'scale(1.02)';
+      draggedElement.classList.add('dragging-link');
     }
   },
 
@@ -2493,9 +2494,7 @@ async loadFolders() {
     // Reset visual feedback
     const draggedElement = e.target.closest('li');
     if (draggedElement) {
-      draggedElement.style.opacity = '';
-      draggedElement.style.transform = '';
-      draggedElement.style.boxShadow = '';
+      draggedElement.classList.remove('dragging', 'dragging-folder', 'dragging-link');
     }
     
     // Remove drop target styling from all folders
@@ -3615,9 +3614,7 @@ const LinkManager = {
      e.currentTarget.classList.remove('folder-drop-target');
      
      if (State.draggedElement) {
-       State.draggedElement.style.opacity = '';
-       State.draggedElement.style.transform = '';
-       State.draggedElement.style.boxShadow = '';
+       State.draggedElement.classList.remove('dragging', 'dragging-folder', 'dragging-link');
      }
      
      const draggedLinkId = e.dataTransfer.getData('text/plain');
